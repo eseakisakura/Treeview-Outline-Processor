@@ -1,0 +1,122 @@
+9 $_.Node.Parent.FullPath 
+
+	
+8 $_.Node.PrevNode.FullPath 
+ 
+7 $_.Node.PrevNode.LastNode.FullPath 
+  
+6 $_.Node.Parent.FullPath 
+
+	 
+5 
+	$_.Node.Parent.FullPath
+
+	 
+4 
+	$_.Node.PrevNode.LastNode.FullPath
+  
+3 
+	$_.Node.PrevNode.FullPath > $null
+	$_.Node.Parent.FullPath
+
+	if($y.PrevNode -ne $null){
+		$y= $y.PrevNode
+	}elseif{
+		$y= $y.Parent
+	}
+	 
+2 
+	$_.Node.PrevNode.LastNode.FullPath
+	$_.Node.LastNode.FullPath
+	$_.Node.LastNode.FullPath > $null
+
+	if($y.PrevNode -ne $null){
+		$y= $y.PrevNode
+	}else{
+		$y= $y.Parent
+	}
+ 	  
+1 
+function FindSrch($x){
+ } #func
+
+FindSrch $script:focus
+	 
+2 
+function FindSrch($x){
+
+	if($x.FirstNode -ne $null){
+		$y= $x.FirstNode
+		$script:stuck+= $y
+		$script:focus= $y
+	}
+
+
+ } #func
+	 
+3 
+function FindSrch($x){
+
+	if($x.FirstNode -ne $null){
+		$y= $x.FirstNode
+		$script:stuck+= $y
+		$script:focus= $y
+	}
+ } #func
+   
+4 
+FindSrch $script:focus
+function FindSrch($y){
+
+	[int] $sw= 0
+	while(1){
+		switch($sw){
+		0{
+			if($y.FirstNode -ne $null){
+
+				$y= $y.FirstNode
+			}elseif($y.NextNode -ne $null){
+
+				$y= $y.NextNode
+			}else{
+
+				$sw= 1
+			}
+			break;
+		}1{
+			if($y.Parent.NextNode -ne $null){
+
+				$y= $y.Parent.NextNode
+				$sw= 0
+			}else{
+				if($y.Level -gt 0){
+
+					$y= $y.Parent.NextNode
+				}else{
+
+					break; # “Ë‚«“–‚è
+				}
+			}
+		}
+		} #sw
+
+		$y.FullPath | write-host
+	} #
+ } #func
+
+	
+5 $_.Node.FirstNode.FullPath 
+ 
+6 $_.Node.FirstNode.FullPath > $null 
+   $_.Node.NextNode.FullPath
+  
+7 $_.Node.FirstNode.FullPath > $null 
+   $_.Node.NextNode.FullPath > $null
+   $_.Node.Parent.NextNode.FullPath
+ 
+   $script:focus.FirstNode.FullPath > $null 
+   $script:focus.NextNode.FullPath > $null
+   $script:focus.Parent.FullPath
+   $script:focus.NextNode.FullPath > $null
+   $_.Node.Parent.Parent.NextNode.FullPath
+ 
