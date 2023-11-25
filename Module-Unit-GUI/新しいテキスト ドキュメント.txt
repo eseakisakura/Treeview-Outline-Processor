@@ -1,0 +1,122 @@
+4count instanceの経路
+□true	■false	instance3.Remove
+
+□□□　□□□　□□□　□□□
+010203  101213  202123  303132
+□■□　□■□　■■■　□□■
+
+6= (4 -1 )*4 / 2
+6= 3+ 2+ 1
+
+□□□□　□□□□　□□□□　□□□□
+00010203  10111213  20212223  30313233
+□□■□　□□■□　■■■■　□□■□
+
+2= i% 4 の配列を消す
+2= i/ 4 の配列を消す
+
+
+
+static class Module
+send_id	<- MouseDown Event
+post_id	<- MouseHover Event
+inst[i]	// instance count
+inst[i].Location
+arr_tog
+
+
+Bg_toggle(4)	// MouseUp Event
+// if(post_id != null){
+	int num= send_id* 4+ post_id
+	if(arr_tog[num] == true){
+		arr_tog[num]= false	// Line Remove
+	}else{
+		arr_tog[num]= true
+	}
+	Bg_draw(grand)
+// }
+
+
+Module_add()
+Array.Resize(ref inst inst.Length+ 1);
+inst[ inst.Length- 1]= new Box_pict();
+
+4= inst.Length
+int x= Convert.ToInt32( Math.Pow(2, 4) );	// 4^2
+bool[] brray= new bool[x]
+int j= 0
+if( inst.Length> 1){
+	for( int i= 0; i< x; i++){
+		if( i/ 2 == 1){	// 0 1 2 3
+			brray[i]= false
+		}elseif( i% 2 == 1){	// 0 1 2 3
+			brray[i]= false
+		}else{
+			brray[i]= arr_tog[j]
+			j++;
+		}
+	} //
+}else{
+	brray[0]= false
+}
+this.arr_tog= brray
+
+
+Lay_draw(Lay_pict parent)
+
+	parent.gpb.Clear(Color.Transparent);
+	parent.gpb..DrawLine(xpen, inst[ss].Location.X, inst[ss].Location.Y, e.Location.X, e.Location.Y )
+	parent.bg_picture.Refresh();	// レイヤー描画
+
+
+Bg_draw(Bg_pict grand)
+4= inst.Length
+int x= arr_tog.Length
+
+grand.gpb.Clear(Color.Navy);
+
+for( int i= 0; i< x; i++){
+
+	if ( i% 4 == i/ 4){	// 00,11,.. // <- false only
+	}else{
+		if(arr_tog[i] == true){
+			int ss= i/ 4
+			int pp= i% 4
+
+			grand.gpb..DrawLine(xpen, inst[ss].Location.X, inst[ss].Location.Y, inst[pp].Location.X, inst[pp].Location.Y )
+		}
+	}
+} //
+grand.bg_picture.Refresh();	// Bg描画
+
+
+Module_remove(2)
+Box_pict[] brr= new Box_pict[ inst.Length- 1]
+4= inst.Length
+int j= 0
+for( int i= 0; i < 4; i++){
+	if( i == 2){
+	}else{
+		brr[j]= inst[i]
+		j++;
+	}
+} //
+this.inst= brr
+
+4= inst.Length
+int x= Convert.ToInt32( Math.Pow(2, 4) );	// 4^2
+bool[] brray= new bool[x]
+int j= 0
+
+for( int i= 0; i< x; i++){
+	if( i/ 4 == 2){
+	}elseif( i% 4 == 2){
+	}else{
+		brray[j]= arr_tog[i]
+		j++;
+	}
+} //
+this.arr_tog= brray
+
+Bg_draw(grand)
+
