@@ -1,0 +1,70 @@
+<Window
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	Height="500" Width="500"
+	Title="Hello, WPF!">
+<!--
+-->
+<!--
+-->
+		<!-- 行 -->
+<!--		<Grid.RowDefinitions>
+			<RowDefinition Height="123"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="2*"/>
+		</Grid.RowDefinitions>
+-->
+<StackPanel Background= "Gray" Orientation="Vertical">
+	<!-- Panel inner menu -->
+	<Menu>
+		<MenuItem Header="ファイル(_F)">
+			<MenuItem x:Name="ok_menu" Header="保存" />
+<!--			<MenuItem Header="保存" Click="Save_Click" />
+			<MenuItem Header="閉じる" Click="Close_Click" />
+-->		</MenuItem>
+
+		<MenuItem Header="編集(_E)">
+			<MenuItem Header="編集 1" />
+			<Separator />
+			<MenuItem Header="編集 2" />
+			<MenuItem Header="編集 3" />
+		</MenuItem>
+	</Menu>
+
+
+		<!-- 列 -->
+		<Grid Background="Blue">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="123"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+
+			<Border Grid.Column="0" BorderBrush="Red" BorderThickness="1,1,1,1" />
+			<Border Grid.Column="1" BorderBrush="Green" BorderThickness="1,1,1,1" />
+			<Button Grid.Column="0" x:Name="ok_button" VerticalAlignment="Bottom" Width="100" Height="50">
+OK</Button>
+			<Slider Grid.Column="1" x:Name="ok_slider" Margin="20,20,20,20" />
+		</Grid>
+	<StackPanel Background= "Navy" Orientation="Horizontal">
+	<MediaElement x:Name="ok_player" LoadedBehavior="Manual" UnloadedBehavior="Stop" Stretch="Uniform"/>
+	<Label Foreground= "White">test-test0</Label>
+	<Label Foreground= "White">test-test1</Label>
+	<Label Foreground= "White">test-test2</Label>
+	<Label Foreground= "White" x:Name="ok_label">test-test3</Label>
+	</StackPanel>
+</StackPanel>
+<!--
+	<Grid>
+ Grid.Row="0"
+ Grid.Row="1"
+	<Button Grid.Column="1" x:Name="ok_button" VerticalAlignment="Bottom" Width="100" Height="50">OK</Button>
+	<StackPanel Orientation="Vertical" Background= "Navy" Height="300" >
+	<Button Grid.Row="1" x:Name="ok_button" Width="200" Height="50">OK</Button>
+	<Slider Grid.Row="3" IsMoveToPointEnabled="true" x:Name="ok_slider" Margin="20,20,20,100" />
+	<Button Grid.Row="2" Name="buttonDown" Click="buttonDown_Click" Content="下げる" Margin="20,120,180,20" />
+	<Button x:Name="StopButton" Click="StopButton_Click" Grid.Column="2" Margin="5" Padding="5" Content="停止" FontSize="16" IsEnabled="False" />
+-->
+<!--
+-->
+</Window>
