@@ -6,6 +6,6 @@
 <H2>Module-Unit-GUI</H2>
 モジュールユニットのインターフェース<br>
 <br>
-<H2>Media Player-WPF</H2>
+<H2>Media-Player-WPF</H2>
 XAML+ WPFの音楽プレイヤー<br>
 <br>
