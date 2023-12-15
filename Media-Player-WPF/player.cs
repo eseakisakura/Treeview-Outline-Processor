@@ -8,12 +8,12 @@ using System.Windows.Threading;
 class Player_class
 {
 	// System.Diagnostics.Stopwatch swh= new System.Diagnostics.Stopwatch();
-	DispatcherTimer tim = new DispatcherTimer()	// WPF timer
+	public DispatcherTimer tim = new DispatcherTimer()	// WPF timer
 	{
 		Interval = TimeSpan.FromMilliseconds(500 ),
 	};
 
-	DispatcherTimer tim2 = new DispatcherTimer()	// 加速装置
+	public DispatcherTimer tim2 = new DispatcherTimer()	// 加速装置
 	{
 		Interval = TimeSpan.FromMilliseconds(25 ),
 	};
@@ -22,7 +22,7 @@ class Player_class
 	TimeSpan post_position;
 	Slider ok_slider;
 	Label ok_label;
-	MediaElement ok_player;
+	public MediaElement ok_player;
 
 	public Player_class(Main_app parent, string location)
 	{
@@ -56,8 +56,8 @@ class Player_class
 		{
 			if(reverse == true){
 
+				slider_Postion();	// before just
 				ok_player.Position+= TimeSpan.FromSeconds(-2.5 );
-				slider_Postion();
 
 				if(ok_player.Position <= post_position ){
 					tim2.Stop();
@@ -65,7 +65,7 @@ class Player_class
 				}
 			}else{
 				ok_player.Position+= TimeSpan.FromSeconds(2.5 );
-				slider_Postion();
+				slider_Postion();	// after just
 
 				if(ok_player.Position >= post_position ){
 					tim2.Stop();
@@ -84,20 +84,17 @@ class Player_class
 			}
 		};
 
-		ok_slider.AddHandler(
+		ok_slider.AddHandler(	// Thumb event
 			Thumb.DragStartedEvent,
-			new DragStartedEventHandler(slider_MouseDrag),
-			true
+			new DragStartedEventHandler(slider_MouseDrag)
 		);
 		ok_slider.AddHandler(
 			Thumb.DragDeltaEvent,
-			new DragDeltaEventHandler(slider_MouseDelta),
-			true
+			new DragDeltaEventHandler(slider_MouseDelta)
 		);
 		ok_slider.AddHandler(
 			Thumb.DragCompletedEvent,
-			new DragCompletedEventHandler(slider_MouseDrop),
-			true
+			new DragCompletedEventHandler(slider_MouseDrop)
 		);
 
 		// AddHandler(RoutedEvent, Delegate, Boolean)	// method -> event set

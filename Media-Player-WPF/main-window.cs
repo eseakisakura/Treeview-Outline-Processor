@@ -27,6 +27,15 @@ class Main_app : Application
 			Console.WriteLine(window.Content);	//コンテントproperty
 		};
 
+		window.Closed+= (sender, e)=>
+		{
+			player_inst.ok_player.Stop();
+			player_inst.tim.Stop();
+			player_inst.tim2.Stop();
+
+			Console.WriteLine("click! window Closed");
+		};
+
 		button_inst= new Button_class(this );
 		menu_inst= new Menu_class(this );
 
@@ -38,7 +47,7 @@ class Main_app : Application
 		Console.WriteLine("ERR: main-window-constructor >");
 		Console.WriteLine(ex);
 	}finally{
-		// window.Dispose();
+		// this.Dispose();
 	}
 	}
 }

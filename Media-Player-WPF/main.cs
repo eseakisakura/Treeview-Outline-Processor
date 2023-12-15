@@ -4,7 +4,6 @@ using System.Windows;
 
 public class Programs
 {
-
 	[STAThread]
 	public static void Main(string[] args )	// Entry point
 	{
