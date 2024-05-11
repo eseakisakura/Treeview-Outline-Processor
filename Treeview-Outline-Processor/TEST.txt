@@ -1,21 +1,14 @@
-﻿いいち S
+﻿いいち space
 いち
-CN
-よよS
-よ
-C
-なななS
-なな
-SSFS
-ににS
+タブスペースで子階層、開状況
+tabspace
+くくspace
+く
+スペースタブスペーススペースよよにフォーカス、2階層上
+spacetabspace
+ににspacetab
 に
-C
-ごご
-ごS
-S
-ろくなSB
-ろく
-SS
-なさんS
-さん
-S
+space
+ななspace
+な
+space

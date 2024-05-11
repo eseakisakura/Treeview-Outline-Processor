@@ -1,4 +1,4 @@
-ï»¿9 $_.Node.Parent.FullPath 
+9 $_.Node.Parent.FullPath 
 
 	
 8 $_.Node.PrevNode.FullPath 
@@ -94,7 +94,7 @@ function FindSrch($y){
 					$y= $y.Parent.NextNode
 				}else{
 
-					break; # çªãå½“ã‚Š
+					break; # “Ë‚«“–‚è
 				}
 			}
 		}
