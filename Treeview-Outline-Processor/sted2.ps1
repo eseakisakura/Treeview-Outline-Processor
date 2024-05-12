@@ -574,10 +574,54 @@ function Upper_search(){
 	
 #> 
   
+$tree= New-Object System.Windows.Forms.TreeView 
+$tree.Size= "200, 500"
+$tree.Location= "10, 10"
+$tree.HideSelection= $False
+# $tree.SelectedNode (equal) $_.Node
+
+$tree.Add_AfterSelect({
+
+	"------" | write-host
+	("index: "+ $this.Nodes.IndexOf($_.Node)) | write-host
+	$this.TopNode.FullPath | write-host
+	$_.Node.Parent.FullPath | write-host
+	$_.Node.PrevNode.LastNode.FullPath | write-host
+	$_.Node.PrevNode.FullPath | write-host
+	$_.Node.FullPath | write-host
+	$_.Node.NextNode.FullPath | write-host
+	$_.Node.FirstNode.FullPath | write-host
+	"------" | write-host
+	$script:focus= $_.Node
+
+	$counterbox.Text= $_.Node.Tag
+	$editbox.Text= $_.Node.name
+	$focusbox.Text= $script:focus
+	$bookmarkbox.Text= $script:bookmark
+ })
+
+
+$tree.Add_MouseDown({
+ try{
+	[string] $rtn= ""
+
+	switch([string] $_.Button){
+	'Left'{	break;
+	}'Right'{
+		$contxt.Show([Windows.Forms.Cursor]::Position)
+		break;
+	}'Middle'{
+	}
+	} #sw
+ }catch{
+	echo $_.exception
+ }
+ })
+ 
 $edit_lbl= New-Object System.Windows.Forms.Label 
 $edit_lbl.Text= "editbox"
 $edit_lbl.Size= "100,20"
-$edit_lbl.Location= "400,10"
+$edit_lbl.Location= "210,10"
 $edit_lbl.TextAlign= "MiddleCenter"
 $edit_lbl.BorderStyle= "Fixed3D"
 $edit_lbl.ForeColor= "black"
@@ -586,8 +630,8 @@ $edit_lbl.ForeColor= "black"
 $editbox= New-Object System.Windows.Forms.TextBox 
 $editbox.Text= "editbox"
 
-$editbox.Size= "200, 180"
-$editbox.Location= "410, 30"
+$editbox.Size= "400, 180"
+$editbox.Location= "210, 30"
 $editbox.Multiline= "True"
 $editbox.AcceptsReturn= "True"
 $editbox.AcceptsTab= "True"
@@ -618,7 +662,7 @@ $editbox.Add_MouseDown({
 $focus_lbl= New-Object System.Windows.Forms.Label 
 $focus_lbl.Text= "focusbox"
 $focus_lbl.Size= "100,20"
-$focus_lbl.Location= "400,210"
+$focus_lbl.Location= "210,210"
 $focus_lbl.TextAlign= "MiddleCenter"
 $focus_lbl.BorderStyle= "Fixed3D"
 $focus_lbl.ForeColor= "black"
@@ -626,8 +670,8 @@ $focus_lbl.ForeColor= "black"
 $focusbox= New-Object System.Windows.Forms.TextBox 
 $focusbox.Text= "forcusbox"
 
-$focusbox.Size= "200, 80"
-$focusbox.Location= "410, 230"
+$focusbox.Size= "400, 80"
+$focusbox.Location= "210, 230"
 $focusbox.Multiline= "True"
 $focusbox.AcceptsReturn= "True"
 $focusbox.AcceptsTab= "True"
@@ -636,7 +680,7 @@ $focusbox.ScrollBars= "Vertical"
 $bookmark_lbl= New-Object System.Windows.Forms.Label 
 $bookmark_lbl.Text= "bookmarkbox"
 $bookmark_lbl.Size= "100,20"
-$bookmark_lbl.Location= "400,310"
+$bookmark_lbl.Location= "210,310"
 $bookmark_lbl.TextAlign= "MiddleCenter"
 $bookmark_lbl.BorderStyle= "Fixed3D"
 $bookmark_lbl.ForeColor= "black"
@@ -644,8 +688,8 @@ $bookmark_lbl.ForeColor= "black"
 $bookmarkbox= New-Object System.Windows.Forms.TextBox 
 $bookmarkbox.Text= "bookmarkbox"
 
-$bookmarkbox.Size= "200, 80"
-$bookmarkbox.Location= "410, 330"
+$bookmarkbox.Size= "400, 80"
+$bookmarkbox.Location= "210, 330"
 $bookmarkbox.Multiline= "True"
 $bookmarkbox.AcceptsReturn= "True"
 $bookmarkbox.AcceptsTab= "True"
@@ -654,7 +698,7 @@ $bookmarkbox.ScrollBars= "Vertical"
 $counter_lbl= New-Object System.Windows.Forms.Label 
 $counter_lbl.Text= "counterbox"
 $counter_lbl.Size= "100,20"
-$counter_lbl.Location= "400,410"
+$counter_lbl.Location= "210,410"
 $counter_lbl.TextAlign= "MiddleCenter"
 $counter_lbl.BorderStyle= "Fixed3D"
 $counter_lbl.ForeColor= "black"
@@ -662,8 +706,8 @@ $counter_lbl.ForeColor= "black"
 $counterbox= New-Object System.Windows.Forms.TextBox 
 $counterbox.Text= "counterbox"
 
-$counterbox.Size= "200, 80"
-$counterbox.Location= "410, 430"
+$counterbox.Size= "400, 80"
+$counterbox.Location= "210, 430"
 $counterbox.Multiline= "True"
 $counterbox.AcceptsReturn= "True"
 $counterbox.AcceptsTab= "True"
@@ -751,55 +795,11 @@ $contxt= New-Object System.Windows.Forms.ContextMenuStrip
 $contxt.Items.AddRange(@($contxt_bmk, $contxt_cut, $contxt_copy, $contxt_paste, $contxt_add, $contxt_12))
 $contxt.Items.Insert(0, $contxt_03) # list object
  
-$tree= New-Object System.Windows.Forms.TreeView 
-$tree.Size= "400, 400"
-$tree.Location= "10, 10"
-$tree.HideSelection= $False
-# $tree.SelectedNode (equal) $_.Node
-
-$tree.Add_AfterSelect({
-
-	"------" | write-host
-	("index: "+ $this.Nodes.IndexOf($_.Node)) | write-host
-	$this.TopNode.FullPath | write-host
-	$_.Node.Parent.FullPath | write-host
-	$_.Node.PrevNode.LastNode.FullPath | write-host
-	$_.Node.PrevNode.FullPath | write-host
-	$_.Node.FullPath | write-host
-	$_.Node.NextNode.FullPath | write-host
-	$_.Node.FirstNode.FullPath | write-host
-	"------" | write-host
-	$script:focus= $_.Node
-
-	$counterbox.Text= $_.Node.Tag
-	$editbox.Text= $_.Node.name
-	$focusbox.Text= $script:focus
-	$bookmarkbox.Text= $script:bookmark
- })
-
-
-$tree.Add_MouseDown({
- try{
-	[string] $rtn= ""
-
-	switch([string] $_.Button){
-	'Left'{	break;
-	}'Right'{
-		$contxt.Show([Windows.Forms.Cursor]::Position)
-		break;
-	}'Middle'{
-	}
-	} #sw
- }catch{
-	echo $_.exception
- }
- })
- 
 $btn0= New-Object System.Windows.Forms.Button 
-$btn0.Size= "200,100"
-$btn0.Location= "10, 410"
+$btn0.Size= "100,100"
+$btn0.Location= "210, 510"
 $btn0.FlatStyle= "Popup"
-$btn0.text= "down search"
+$btn0.text= "select down search"
 
 $btn0.Add_Click({
 
@@ -809,10 +809,10 @@ $btn0.Add_Click({
  })
  
 $btn1= New-Object System.Windows.Forms.Button 
-$btn1.Size= "200,100"
-$btn1.Location= "10, 510"
+$btn1.Size= "100,100"
+$btn1.Location= "310, 510"
 $btn1.FlatStyle= "Popup"
-$btn1.text= "upper search"
+$btn1.text= "select upper search"
 
 $btn1.Add_Click({
 
@@ -822,10 +822,10 @@ $btn1.Add_Click({
  })
  
 $btn2= New-Object System.Windows.Forms.Button 
-$btn2.Size= "200,100"
-$btn2.Location= "210, 410"
+$btn2.Size= "100,100"
+$btn2.Location= "410, 510"
 $btn2.FlatStyle= "Popup"
-$btn2.text= "file write"
+$btn2.text= "doc file write"
 
 $btn2.Add_Click({
 
