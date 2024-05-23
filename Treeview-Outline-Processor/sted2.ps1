@@ -6,14 +6,28 @@ cd (Split-Path -Parent $MyInvocation.MyCommand.Path)
  
 function ForwardFind($x){ 
 
-	$y= $x		# $script:focus
+	$y= $x			# $script:focus
 	("y: "+ $y) | write-host
 
-	[array] $stuck= @($x)	# forcusノード入れる
+	[array] $stuck= @($x)	# 最初にforcusノードから入れる
 
 	[int] $sw= 1
 
-	for([int] $i= 0; $i -lt 20; $i++){
+	# for([int] $i= 0; $i -lt 20; $i++){
+	while(1){
+
+		if($i -gt 500000){
+
+			[string] $qq= "検索ノードが、50万を超えました"
+
+			write-host $qq
+
+			[string] $retn=  [Windows.Forms.MessageBox]::Show(
+			$qq, "確認", "OK","Information","Button1"
+			)
+
+			break;	# 強制終了
+		}
 
 		if($sw -eq 1){
 
@@ -203,11 +217,12 @@ function TreeBuild([string] $readtext){
 		# 空行と番兵分岐
 
 		if( $textline[$i] -eq $sentinel ){
+		# 最終行[-2]確認
 
 			$sentinel_sw= $True
 
 
-		}elseif( $textline[$i] -match "^(tab)(space)*"){  # tabで始まり、spaceがあるかないか
+		}elseif( $textline[$i] -match "^`t *$"){  # `t`s* - tabで始まり、spaceがあるかないか
 		# 子ノードへ+ 開状況チェック
 
 			$y.Name= $mem	# ここで入力
@@ -216,12 +231,11 @@ function TreeBuild([string] $readtext){
 			$mem= ""
 
 
-			if( $textline[$i] -match "space" ){	# 開状況
+			if( $textline[$i] -match "" ){	# `s 開状況
 
 				$y.Expand()
 				write-host ("tab child open label: "+ $textline[$i])
 			}else{
-
 				write-host ("tab child label: "+ $textline[$i])
 			}
 
@@ -234,75 +248,8 @@ function TreeBuild([string] $readtext){
 			# write-host ("child arr: "+ $arr)
 
 
-
-		}elseif( $textline[$i] -match "^(space)((space)|(tab))+" ){  # まずspace、(space or tab)がある
-		# 親ノードへ、フォーカスチェック、開状況のチェックは必要ない
-
-
-			$y.Name= $mem	# ここで入力
-			write-host ("y.Name: "+ $y.Name)
-
-			$mem= ""
-
-
-			[string] $tt= "space"
-
-			if($textline[$i].Contains("tab") -eq $True){
-			# タブまでの個数計算
-
-
-				[int] $nn= $textline[$i].IndexOf("tab")
-
-				[string] $dd= $textline[$i].Substring(0, $nn)
-
-
-				[int] $dt_len= [Math]::Floor($dd.Length / $tt.Length)	# 同階層下へのスペース分
-
-				$dt_len= $arr.Length- $dt_len
-
-				$y= $arr[$dt_len]
-
-				$script:focus= $y	# フォーカス設定
-				write-host ("forcus set : "+ $y)
-
-				[string] $ss= $textline[$i].Replace("tab", "")
-
-				write-host ("forcus tab found: "+ $textline[$i])
-
-			}else{
-				[string]  $ss= $textline[$i]
-
-				write-host ("space's only: "+ $textline[$i])
-			}
-
-
-			if ($sentinel_sw -eq $False ){	# 最終行以外
-
-				[int] $len= [Math]::Floor($ss.Length / $tt.Length)	# 同階層下へのスペース分
-
-				$len= $arr.Length- $len
-				$y= $arr[$len]
-
-
-				$j= $y.Tag	# 添字を取得
-
-				$y= $arr[($len- 1)]	# parent
-				$y.Nodes.AddRange(@("Next Untitled"))
-
-				$j++;
-				$y= $y.Nodes[$j]
-
-				$y.Tag= $j
-
-				$arr= $arr[0..($len)]
-				$arr[-1]= $y
-
-				# write-host ("parent arr: "+ $arr)
-			}
-
-
-		}elseif( $textline[$i] -match "^(space)" ){  #先頭スペースのみ
-		# 次のノードへ
+		}elseif( $textline[$i] -match "^ $" ){  #`s - 先頭スペース行末
+		# 兄弟ノード確認
 
 			$y.Name= $mem	# ここで入力
 			write-host ("y.Name: "+ $y.Name)
@@ -333,20 +280,86 @@ function TreeBuild([string] $readtext){
 			}
 
 
-		}else{
+		}elseif( $textline[$i] -match "^ ( |`t)+$" ){  # まずspace、(space | tab)がある
+		# 親ノードへ、フォーカスチェック、開状況のチェックは必要ない
 
-			# $textline[$i]= $textline[$i].Replace("space","")	# 正規表現のほうが安全
+
+			$y.Name= $mem	# ここで入力
+			write-host ("y.Name: "+ $y.Name)
+
+			$mem= ""
+
+
+			[string] $tt= " "	# `s
+
+			if($textline[$i].Contains("`t") -eq $True){
+			# タブまでの個数計算
+
+
+				[int] $nn= $textline[$i].IndexOf("`t")
+
+				[string] $dd= $textline[$i].Substring(0, $nn)
+
+
+				[int] $dt_len= [Math]::Floor($dd.Length / $tt.Length)	# 同階層下へのスペース分
+
+				$dt_len= $arr.Length- $dt_len
+
+				$y= $arr[$dt_len]
+
+				$script:focus= $y	# フォーカス設定
+				write-host ("forcus set : "+ $y)
+
+				[string] $ss= $textline[$i].Replace("`t", "")
+
+				write-host ("forcus tab found: "+ $textline[$i])
+
+			}else{
+				[string]  $ss= $textline[$i]
+
+				write-host ("space's only: "+ $textline[$i])
+			}
+
+
+			if ($sentinel_sw -eq $False ){	# 最終行以外
+
+
+				[int] $len= [Math]::Floor($ss.Length / $tt.Length)	# 同階層下へのスペース分
+
+				$len= $arr.Length- $len
+				$y= $arr[$len]
+
+
+				$j= $y.Tag	# 添字を取得
+
+				$y= $arr[($len- 1)]	# parent
+				$y.Nodes.AddRange(@("Next Untitled"))
+
+				$j++;
+				$y= $y.Nodes[$j]
+
+				$y.Tag= $j
+
+				$arr= $arr[0..($len)]
+				$arr[-1]= $y
+
+				# write-host ("parent arr: "+ $arr)
+			}
+
+
+		}else{
+		#def.ライン処理
+
+			# $textline[$i]= $textline[$i].Replace(" ","")	# `s - 正規表現のほうが安全
 			# $y.Tag=  ("","")	# 項目増やす場合
 			# $y.Tag[0]=  $counter
 			# $y.Tag[1]=  $mem
 
 
-			# 通常行の処理
-
-			if( $textline[$i] -match "(space)(tab)$" ){	# label+ bookmark
+			if( $textline[$i] -match " `t$" ){	# `s`t label+ bookmark
 
 
-				$label= [System.Text.RegularExpressions.Regex]::Matches( $textline[$i] , ".*(?=(space)(tab)$)")
+				$label= [System.Text.RegularExpressions.Regex]::Matches( $textline[$i] , ".*(?= `t$)")	# `s`t
 				$label= $label.Trim(" ")	# exp -> last space cutting
 
 				write-host ("title+ bookmark label: "+ $label )
@@ -354,20 +367,20 @@ function TreeBuild([string] $readtext){
 				$script:bookmark= $y
 				$y.Text= $label
 
-			}elseif( $textline[$i] -match "(space)$" ){	# label
+			}elseif( $textline[$i] -match " $" ){	# `s - label
 
 
-				$label= [System.Text.RegularExpressions.Regex]::Matches( $textline[$i] , ".*(?=(space)$)")
+				$label= [System.Text.RegularExpressions.Regex]::Matches( $textline[$i] , ".*(?= $)")	# `s
 				$label= $label.Trim(" ")
 
 				$y.Text= $label
 
 				write-host ("title label: "+ $y.Text )
 
-			}elseif( $textline[$i] -match "(tab)$" ){	# bookmark
+			}elseif( $textline[$i] -match "`t$" ){	# bookmark
 
 
-				$label= [System.Text.RegularExpressions.Regex]::Matches( $textline[$i] , ".*(?=(tab)$)")
+				$label= [System.Text.RegularExpressions.Regex]::Matches( $textline[$i] , ".*(?=`t$)")
 				$label= $label.Trim(" ")
 
 				write-host ("bookmark label: "+ $label )
@@ -382,7 +395,6 @@ function TreeBuild([string] $readtext){
 
 			$mem+= $label+ "`r`n"	# ここでtext add
 			$label= ""
-
 		}
 	} #
  } #func
@@ -496,31 +508,6 @@ function Down_search(){
 			break;	# ここでループブレイク
 		}
 	} #
-
-<#
-	[int] $len= 1#$editbox.SelectionLength
-	### [string] $str= "よよ"#$editbox.SelectedText
-
-	### $rtn= $tree.Nodes.Find($str, $False)
-	("rtn: "+ $rtn) | write-host
-	$y= $script:focus
-	#while(1){
-	$y= $y.NextNode
-
-	$rtn= $y.Tag[1].IndexOf($str, 0)
-	("chk3: "+ $retn) | write-host
-
-	$editbox.Text= $y.Tag[1]
-	$script:focus= $y
-
-	$tree.SelectedNode= $script:focus # refocus
-
-	# $script:focus.NextNode.FullPath | write-host
-	$editbox.focus()
-	# [int] $rtn= $editbox.Text.IndexOf($editbox.SelectedText, ($editbox.SelectionStart+ $len)) # 以降
-	# [int] $rtn= $editbox.Text.LastIndexOf($editbox.SelectedText, ($editbox.SelectionStart- 1)) # 以前- 1
-	$editbox.Select($rtn, $len)
-#>
  } # func
  
 function Upper_search(){ 
@@ -570,8 +557,97 @@ function Upper_search(){
 	} #
  } #func
  
+function Drop_Out([string] $arg_file){ 
+
+
+	switch(Chk_path $arg_file){
+	2{
+		[string] $ss= ">>ERROR File Set: Null"
+
+		ErrBox_Console $ss
+		Write-Host $ss
+		break;
+	}1{
+		[string] $ss= "'>>ERROR File Set: Check Path"
+
+		ErrBox_Console $ss
+		Write-Host $ss
+		break;
+
+	}0{
+		[bool] $sw= $False
+
+		if($opt["dd_clear"] -eq "true"){
+
+			$script:mml.Clear()
+			$sw= $True
+
+		}else{
+			[string[]] $arr_mml= $mml.Keys
+			[string[]] $arr= Split_path $arg_file
+
+
+			[string] $p= ""
+			foreach($p in $arr_mml){
+
+				if($p -eq $arr[0]){	# =file name thru
+					$sw= $True
+				}
+			} #
+
+
+			if($arr_mml.Length -lt 4){	# $mml.Keys.Count
+				$sw= $True
+			}
+
+
+			if($sw -eq $False){
+
+				[string] $ss= ">>ERROR mml Slot: Over Count"
+
+				ErrBox_Console $ss
+				Write-Host $ss
+
+				[string] $retn= [Windows.Forms.MessageBox]::Show(
+
+				"スロットが満杯です。", "確認", "OK","Information","Button1"
+				)
+			}
+		}
+
+		if($sw -eq $True){
+
+			Watch_Drop $arg_file
+		}
+	}
+	} #sw
+ } #func
+ 
 <# 
 	
+	[int] $len= 1#$editbox.SelectionLength 
+	### [string] $str= "よよ"#$editbox.SelectedText
+
+	### $rtn= $tree.Nodes.Find($str, $False)
+	("rtn: "+ $rtn) | write-host
+	$y= $script:focus
+	#while(1){
+	$y= $y.NextNode
+
+	$rtn= $y.Tag[1].IndexOf($str, 0)
+	("chk3: "+ $retn) | write-host
+
+	$editbox.Text= $y.Tag[1]
+	$script:focus= $y
+
+	$tree.SelectedNode= $script:focus # refocus
+
+	# $script:focus.NextNode.FullPath | write-host
+	$editbox.focus()
+	# [int] $rtn= $editbox.Text.IndexOf($editbox.SelectedText, ($editbox.SelectionStart+ $len)) # 以降
+	# [int] $rtn= $editbox.Text.LastIndexOf($editbox.SelectedText, ($editbox.SelectionStart- 1)) # 以前- 1
+	$editbox.Select($rtn, $len)
+ 
 #> 
   
 $tree= New-Object System.Windows.Forms.TreeView 
@@ -641,6 +717,13 @@ $editbox.WordWrap= "True"
 # $editbox.SelectedText
 # $editbox.SelectionLength
 # $editbox.SelectionStart
+
+
+$editbox.Add_Leave({
+
+	$script:focus.Name= $this.Text
+})
+
 
 $editbox.Add_MouseDown({
  try{
@@ -839,7 +922,7 @@ $btn2.Add_Click({
 
 		# $rtn | Out-File -Encoding oem -FilePath ".\TEST-01.txt" # shiftJIS
  })
- 	
+ 
 $frm= New-Object System.Windows.Forms.Form 
 $frm.Size= @(640, 660) -join "," # string出力
 $frm.Text= "TreeView"
@@ -856,12 +939,35 @@ $frm.TopLevel= $True
 # $frm.AllowTransparency= $True
 # $frm.Opacity = 0.5
 
-$frm.Add_Load({
- })
+# $frm.Add_Load({
+#  })
 
-$frm.Add_Resize({
- })
- 
+# $frm.Add_Resize({
+#  })
+
+$frm.AllowDrop= $True
+
+$frm.Add_DragEnter({
+
+	$_.Effect= "All"
+})
+
+$frm.Add_DragDrop({
+  try{
+	[string[]] $rtn= $_.Data.GetData("FileDrop")
+
+	$tree.Nodes.Clear()
+
+	TreeBuild (cat $rtn[0] | Out-String)
+
+	$tree.SelectedNode= $script:focus
+
+  }catch{
+	echo $_.exception
+  }
+})
+
+ 	
 $frm.Controls.AddRange(@($tree)) 
 $frm.Controls.AddRange(@($edit_lbl, $editbox, $focus_lbl, $focusbox, $bookmark_lbl, $bookmarkbox, $counter_lbl, $counterbox))
 $frm.Controls.AddRange(@($btn0, $btn1, $btn2))
