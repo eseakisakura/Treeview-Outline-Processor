@@ -231,7 +231,7 @@ function TreeBuild([string] $readtext){
 			$mem= ""
 
 
-			if( $textline[$i] -match "" ){	# `s 開状況
+			if( $textline[$i] -match " " ){	# `s 開状況
 
 				$y.Expand()
 				write-host ("tab child open label: "+ $textline[$i])
@@ -399,7 +399,7 @@ function TreeBuild([string] $readtext){
 	} #
  } #func
  
-function DocBuild($x){ 
+function DocBuild($x){	# $tree 
 
 	[string] $output= ""
 
@@ -411,7 +411,7 @@ function DocBuild($x){
 
 		if($script:bookmark -eq $y){
 
-			[string] $bmk= "tab" # `t
+			[string] $bmk= "`t" # tab
 		}else{
 			[string] $bmk= ""
 		}
@@ -428,7 +428,7 @@ function DocBuild($x){
 
 			if($y.Text -eq $arr[$j]){	# title line
 
-				$output+= "space"
+				$output+= " "	# space
 				$output+= $bmk
 			}
 
@@ -438,14 +438,15 @@ function DocBuild($x){
 			}
 		} #
 
+		# 空行分の出力
 
-		if($y.Nodes.Count -gt 0){	# child count
+		if($y.Nodes.Count -gt 0){	# 子階層チェック
 
-			$output+= "tab"	# `t
+			$output+= "`t"	# tab
 
 			if($y.IsExpanded -eq "True"){	# node展開時
 
-				$output+= "space"	# `s
+				$output+= " "	# space
 			}
 
 			$output+= "`r`n"
@@ -454,15 +455,15 @@ function DocBuild($x){
 			$output+= DocBuild $y 	# 再帰
 					#段数分、ここから下へ吐き出す。
 
-			$output+= "space"	# `s
+			$output+= " "	# space
 
-		}else{	# 残り親nodeへ
-			$output+= "space"	# `s
+		}else{	# 兄弟node
+			$output+= " "	# space
 		}
 
-		if($focus -eq $y){
+		if($focus -eq $y){	# フォーカスあらばadd
 
-			$output+= "tab"	# `t
+			$output+= "`t"	# tab
 		}
 
 		if($i -lt ($x.Nodes.Count- 1)){	# max count
@@ -557,99 +558,8 @@ function Upper_search(){
 	} #
  } #func
  
-function Drop_Out([string] $arg_file){ 
-
-
-	switch(Chk_path $arg_file){
-	2{
-		[string] $ss= ">>ERROR File Set: Null"
-
-		ErrBox_Console $ss
-		Write-Host $ss
-		break;
-	}1{
-		[string] $ss= "'>>ERROR File Set: Check Path"
-
-		ErrBox_Console $ss
-		Write-Host $ss
-		break;
-
-	}0{
-		[bool] $sw= $False
-
-		if($opt["dd_clear"] -eq "true"){
-
-			$script:mml.Clear()
-			$sw= $True
-
-		}else{
-			[string[]] $arr_mml= $mml.Keys
-			[string[]] $arr= Split_path $arg_file
-
-
-			[string] $p= ""
-			foreach($p in $arr_mml){
-
-				if($p -eq $arr[0]){	# =file name thru
-					$sw= $True
-				}
-			} #
-
-
-			if($arr_mml.Length -lt 4){	# $mml.Keys.Count
-				$sw= $True
-			}
-
-
-			if($sw -eq $False){
-
-				[string] $ss= ">>ERROR mml Slot: Over Count"
-
-				ErrBox_Console $ss
-				Write-Host $ss
-
-				[string] $retn= [Windows.Forms.MessageBox]::Show(
-
-				"スロットが満杯です。", "確認", "OK","Information","Button1"
-				)
-			}
-		}
-
-		if($sw -eq $True){
-
-			Watch_Drop $arg_file
-		}
-	}
-	} #sw
- } #func
- 
-<# 
-	
-	[int] $len= 1#$editbox.SelectionLength 
-	### [string] $str= "よよ"#$editbox.SelectedText
-
-	### $rtn= $tree.Nodes.Find($str, $False)
-	("rtn: "+ $rtn) | write-host
-	$y= $script:focus
-	#while(1){
-	$y= $y.NextNode
-
-	$rtn= $y.Tag[1].IndexOf($str, 0)
-	("chk3: "+ $retn) | write-host
-
-	$editbox.Text= $y.Tag[1]
-	$script:focus= $y
-
-	$tree.SelectedNode= $script:focus # refocus
-
-	# $script:focus.NextNode.FullPath | write-host
-	$editbox.focus()
-	# [int] $rtn= $editbox.Text.IndexOf($editbox.SelectedText, ($editbox.SelectionStart+ $len)) # 以降
-	# [int] $rtn= $editbox.Text.LastIndexOf($editbox.SelectedText, ($editbox.SelectionStart- 1)) # 以前- 1
-	$editbox.Select($rtn, $len)
- 
-#> 
-  
+# ------------ 
+ 	
 $tree= New-Object System.Windows.Forms.TreeView 
 $tree.Size= "200, 500"
 $tree.Location= "10, 10"
@@ -917,7 +827,7 @@ $btn2.Add_Click({
 		$rtn | write-host
 		write-host ("====")
 
-		$rtn | Out-File -Encoding UTF8 -FilePath ".\TEST-01.txt" # UTF8
+		$rtn | Out-File -Encoding UTF8 -FilePath ".\TEST.txt" # UTF8
 
 
 		# $rtn | Out-File -Encoding oem -FilePath ".\TEST-01.txt" # shiftJIS
@@ -956,7 +866,7 @@ $frm.Add_DragDrop({
   try{
 	[string[]] $rtn= $_.Data.GetData("FileDrop")
 
-	$tree.Nodes.Clear()
+	$tree.Nodes.Clear()	# TreeNodeCollection クラス
 
 	TreeBuild (cat $rtn[0] | Out-String)
 
@@ -967,7 +877,7 @@ $frm.Add_DragDrop({
   }
 })
 
- 	
+ 
 $frm.Controls.AddRange(@($tree)) 
 $frm.Controls.AddRange(@($edit_lbl, $editbox, $focus_lbl, $focusbox, $bookmark_lbl, $bookmarkbox, $counter_lbl, $counterbox))
 $frm.Controls.AddRange(@($btn0, $btn1, $btn2))
