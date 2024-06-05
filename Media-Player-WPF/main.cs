@@ -4,11 +4,13 @@ using System.Windows;
 
 public class Programs
 {
+	static Main_app app;
+
 	[STAThread]
 	public static void Main(string[] args )	// Entry point
 	{
 	try{
-		Main_app app = new Main_app(args );
+		app= new Main_app(args );
 
 		// InitializeComponent();	// sampleForm.Designer.csでのmethod
 		// app.StartupUri = new Uri(".\\main-window.xaml", UriKind.Relative);
@@ -21,7 +23,7 @@ public class Programs
 
 		// メッセージ・ループ（メッセージ・ ポンプ）処理
 		// app.window.ShowDialog();
-		app.Run(app.window );
+		app.Run(app.window_form );
 
 	}catch (Exception ex){
 
@@ -30,6 +32,7 @@ public class Programs
 	}finally{
 		// app.Dispose();
 		Console.ReadKey();
+		app.Shutdown();
 	}
 	}
 

@@ -1,4 +1,4 @@
-﻿# powershell.exe -ExecutionPolicy RemoteSigned -NoExit -Sta -File コンパイルスタート.ps1
+# powershell.exe -ExecutionPolicy RemoteSigned -NoExit -Sta -File コンパイルスタート.ps1
 <#
 Function Split_path([string]$f){ 
 
@@ -21,7 +21,8 @@ echo "Path :"
 # 64でもexeは同じものが出る
 # $Env:Path+= ";C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\"
 # $Env:Path+= ";C:\Windows\Microsoft.NET\Framework64\v4.0.30319\"
-$Env:Path+= ";C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\Roslyn\"
+$Env:Path+= ";C:\programs\script\net_framework4_8\tasks\net472\"
+# $Env:Path+= ";C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\Roslyn\"
 
 echo $Env:Path
 echo ""
@@ -47,7 +48,7 @@ $ref[2]= $reference+ "\WPF\PresentationFramework.dll"
 $ref[3]= $reference+ "\System.Xaml.dll"
 
 #csc -reference:C:\Windows\Microsoft.NET\Framework\v4.0.30319\WPF\WindowsBase.dll -reference:C:\Windows\Microsoft.NET\Framework\v4.0.30319\WPF\PresentationCore.dll -out:$exe_path $Args[0]
-csc -reference:$ref[0] -reference:$ref[1] -reference:$ref[2] -reference:$ref[3] -out:xaml-test.exe .\*.cs
+csc -reference:$ref[0] -reference:$ref[1] -reference:$ref[2] -reference:$ref[3] -out:wpf-test.exe .\*.cs
 read-host "pause"
 
 .\xaml-test.exe
