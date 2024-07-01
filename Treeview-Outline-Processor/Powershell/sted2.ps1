@@ -360,10 +360,9 @@ function TreeBuild([string] $readtext){
 
 
 				$label= [System.Text.RegularExpressions.Regex]::Matches( $textline[$i] , ".*(?= `t$)")	# `s`t
-				$label= $label.Trim(" ")	# exp -> last space cutting
+				$label= $label.Trim(" ")	# exp -> last space cutting -> node in
 
 				write-host ("title+ bookmark label: "+ $label )
-
 				$script:bookmark= $y
 				$y.Text= $label
 
@@ -373,9 +372,9 @@ function TreeBuild([string] $readtext){
 				$label= [System.Text.RegularExpressions.Regex]::Matches( $textline[$i] , ".*(?= $)")	# `s
 				$label= $label.Trim(" ")
 
+				write-host ("title label: "+ $label )
 				$y.Text= $label
 
-				write-host ("title label: "+ $y.Text )
 
 			}elseif( $textline[$i] -match "`t$" ){	# bookmark
 
@@ -559,7 +558,7 @@ function Upper_search(){
  } #func
  
 # ------------ 
- 	
+ 
 $tree= New-Object System.Windows.Forms.TreeView 
 $tree.Size= "200, 500"
 $tree.Location= "10, 10"
@@ -781,7 +780,6 @@ $contxt_12.Add_Click({
 
 	$script:focus= $y.Nodes[0]	# refocus
 	$tree.SelectedNode= $y.Nodes[0]
-
  })
 
 $contxt= New-Object System.Windows.Forms.ContextMenuStrip
@@ -866,6 +864,10 @@ $frm.Add_DragDrop({
   try{
 	[string[]] $rtn= $_.Data.GetData("FileDrop")
 
+	$script:focus= ""
+	$script:node_clip= ""
+	$script:bookmark= ""
+
 	$tree.Nodes.Clear()	# TreeNodeCollection クラス
 
 	TreeBuild (cat $rtn[0] | Out-String)
@@ -877,7 +879,7 @@ $frm.Add_DragDrop({
   }
 })
 
- 
+ 	
 $frm.Controls.AddRange(@($tree)) 
 $frm.Controls.AddRange(@($edit_lbl, $editbox, $focus_lbl, $focusbox, $bookmark_lbl, $bookmarkbox, $counter_lbl, $counterbox))
 $frm.Controls.AddRange(@($btn0, $btn1, $btn2))
