@@ -1,4 +1,8 @@
-ï»¿Add-Type -AssemblyName System.Windows.Forms > $null 
+# counter box‚Ìƒiƒ“ƒo[o—Í 
+ 
+# ƒ^ƒCƒgƒ‹ˆÊ’u‚Ì•ÏX@‘g‚İ‚İ 
+ 
+Add-Type -AssemblyName System.Windows.Forms > $null 
 Add-Type -AssemblyName System.Drawing > $null
 
 cd (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -7,34 +11,33 @@ cd (Split-Path -Parent $MyInvocation.MyCommand.Path)
 function ForwardFind($x){ 
 
 	$y= $x			# $script:focus
-	("y: "+ $y) | write-host
 
-	[array] $stuck= @($x)	# æœ€åˆã«forcusãƒãƒ¼ãƒ‰ã‹ã‚‰å…¥ã‚Œã‚‹
+	[array] $stuck= @($x)	# Å‰‚Éforcusƒm[ƒh‚©‚ç“ü‚ê‚é
 
+	[int] $i= 0
 	[int] $sw= 1
-
 	# for([int] $i= 0; $i -lt 20; $i++){
 	while(1){
 
-		if($i -gt 500000){
+		if($i -gt 5000){
 
-			[string] $qq= "æ¤œç´¢ãƒãƒ¼ãƒ‰ãŒã€50ä¸‡ã‚’è¶…ãˆã¾ã—ãŸ"
+			[string] $qq= "ŒŸõƒm[ƒh‚ªA5000‚ğ’´‚¦‚Ü‚µ‚½"
 
-			write-host $qq
+			Write-Host $qq
 
-			[string] $retn=  [Windows.Forms.MessageBox]::Show(
-			$qq, "ç¢ºèª", "OK","Information","Button1"
-			)
+			#[string] $retn=  [Windows.Forms.MessageBox]::Show(
+			#$qq, "Šm”F", "OK","Information","Button1"
+			#)
 
-			break;	# å¼·åˆ¶çµ‚äº†
+			break;	# ‹­§I—¹
 		}
 
 		if($sw -eq 1){
 
 			if($y.FirstNode -ne $null){
 
-				$y= $y.FirstNode	# æœ€åˆã®å­ãƒ„ãƒªãƒ¼ ãƒãƒ¼ãƒ‰
-				("FirstNodefullpath: "+$y.FullPath) | write-host
+				$y= $y.FirstNode	# Å‰‚ÌqƒcƒŠ[ ƒm[ƒh
+				#("FirstNodefullpath: "+$y.FullPath) | write-host
 
 				if($y -eq $x){ break; }
 
@@ -42,8 +45,8 @@ function ForwardFind($x){
 
 			}elseif($y.NextNode -ne $null){
 
-				$y= $y.NextNode	# å…„å¼Ÿãƒ„ãƒªãƒ¼ ãƒãƒ¼ãƒ‰
-				("NextNodefullpath: "+$y.FullPath) | write-host
+				$y= $y.NextNode	# ŒZ’íƒcƒŠ[ ƒm[ƒh
+				#("NextNodefullpath: "+$y.FullPath) | write-host
 
 				if($y -eq $x){ break; }
 
@@ -56,8 +59,8 @@ function ForwardFind($x){
 		}else{
 			if($y.Parent.NextNode -ne $null){
 
-				$y= $y.Parent.NextNode	# è¦ªã®å…„å¼Ÿãƒãƒ¼ãƒ‰
-				("Parent.NextNodefullpath: "+$y.FullPath) | write-host
+				$y= $y.Parent.NextNode	# e‚ÌŒZ’íƒm[ƒh
+				#("Parent.NextNodefullpath: "+$y.FullPath) | write-host
 
 				if($y -eq $x){ break; }
 
@@ -65,13 +68,13 @@ function ForwardFind($x){
 				$sw= 1
 
 			}else{
-				if($y.Level -gt 0){	# ãƒˆãƒƒãƒ—ãƒãƒ¼ãƒ‰ä»¥å¤–
+				if($y.Level -gt 0){	# ƒgƒbƒvƒm[ƒhˆÈŠO
 
-					$y= $y.Parent	# ã„ã£ãŸã‚“è¦ªã¸æˆ»ã‚‹
+					$y= $y.Parent	# ‚¢‚Á‚½‚ñe‚Ö–ß‚é
 
 				}else{
 					$y= $tree.TopNode
-					("tree.TopNodefullpath: "+ $y.FullPath) | write-host
+					#("tree.TopNodefullpath: "+ $y.FullPath) | write-host
 
 					if($y -eq $x){ break; }
 
@@ -80,220 +83,240 @@ function ForwardFind($x){
 				}
 			}
 		}
+
+
+		$i++;
+
 	} #
 
-	$stuck+= $x	# æœ€å¾Œã«å›å¸°ãƒãƒ¼ãƒ‰æ¤œç´¢åˆ†
+	$stuck+= $x	# ÅŒã‚É‰ñ‹Aƒm[ƒhŒŸõ•ª
 	return $stuck
  } #func
  
-function PasteSelecter([string] $sw){ 
+function NodePaste([string] $sw){ 
+
+	if($script:focus.Level -eq 0){	# $script:focus.Parent -eq $null‚Ì‚½‚ß
+
+		[object] $y= $tree.Nodes
+	}else{
+		[object] $y= $script:focus.Parent.Nodes	# forcusƒm[ƒh‚Ì‰º‚Öadd
+	}
+
+	if($sw -eq "add"){
+
+		[int] $ee= $y.IndexOf($script:focus)
+		[int] $nn= $ee+ 1	# ‰ºƒm[ƒh		# .Insert node
+	}else{
+		[int] $nn= $y.IndexOf($script:focus)	# .Insert node
+		##[int] $ee= $nn+ 1	#‰ºƒm[ƒh
+	}
 
 
-	[string] $clip= [Windows.Forms.Clipboard]::GetText([Windows.Forms.TextDataFormat]::UnicodeText)
+	$y.Insert($nn, $script:node_clip.Clone())
 
 
-	if($clip -eq "tree.nodes.data.flag.clipboard"){
+	##[object] $x= $y[$ee]
+	##$x.Tag= $ee
 
-		if($script:focus.Level -eq 0){	# $script:focus.Parent -eq $nullã®ãŸã‚
+	[object] $z= $y[$nn]
 
-			[object] $y= $tree.Nodes
-		}else{
-			[object] $y= $script:focus.Parent.Nodes	# forcusãƒãƒ¼ãƒ‰ã®ä¸‹ã¸add
-		}
+	## $z.Tag= $nn	## •s—v
+
+
+	$script:focus= $z	# reforcus
+	$tree.SelectedNode=  $script:focus
+
+ } # func
+ 
+function PlainPaste([string] $sw, [bool] $new){	# plain text 
+
+	if($script:focus.Level -eq 0){
+
+		[object] $y= $tree.Nodes
+
+		[object] $z= $script:focus.Parent.Nodes
 
 		if($sw -eq "add"){
 
-			[int] $ee= $y.IndexOf($script:focus)
-			[int] $nn= $ee+ 1	# ä¸‹ãƒãƒ¼ãƒ‰
+			[int[]] $dd= 1, 1
 		}else{
-			[int] $nn= $y.IndexOf($script:focus)
-			[int] $ee= $nn+ 1	#ä¸‹ãƒãƒ¼ãƒ‰
+			[int[]] $dd= 0, -1
 		}
 
+		$y.Insert(($y.IndexOf($script:focus)+ $dd[0]), "Untitled")
 
-		$y.Insert($nn, $script:node_clip.Clone())
+		[object] $obj= $y[$z.IndexOf($script:focus)+ $dd[1] ]
 
-		[object] $x= $y[$ee]
-		$x.Tag= $ee
-
-		[object] $z= $y[$nn]
-		$z.Tag= $nn
-
-		$script:focus= $z	# reforcus
-		$tree.SelectedNode=  $z
 
 	}else{
-		# plain text
+		[object] $y= $script:focus.Parent.Nodes
 
-		if($script:focus.Level -eq 0){
+		if($sw -eq "add"){
 
-			[object] $y= $tree.Nodes
-
-			[object] $z= $script:focus.Parent.Nodes
-
-			if($sw -eq "add"){
-				[int[]] $dd= 1, 1
-			}else{
-				[int[]] $dd= 0, -1
-			}
-
-			$y.Insert(($y.IndexOf($script:focus)+ $dd[0]), "Untitled")
-
-			[object] $obj= $y[$z.IndexOf($script:focus)+ $dd[1] ]
-
-
+			[int[]] $dd= 1, 1
 		}else{
-			[object] $y= $script:focus.Parent.Nodes
-
-			if($sw -eq "add"){
-				[int[]] $dd= 1, 1
-			}else{
-				[int[]] $dd= 0, -1
-			}
-
-			$y.Insert(($y.IndexOf($script:focus)+ $dd[0]), "Untitled")
-
-			[object] $obj= $y[$y.IndexOf($script:focus)+ $dd[1] ]
+			[int[]] $dd= 0, -1
 		}
 
-		[string[]] $doc= $clip -split "`r`n"
+		$y.Insert(($y.IndexOf($script:focus)+ $dd[0]), "Untitled")
 
-		# if($doc[0] -eq ""){
-		#	$obj.Text= "Untitled"
-		# }else{
+		[object] $obj= $y[$y.IndexOf($script:focus)+ $dd[1] ]
+	}
 
-		$obj.Text= $doc[0]	# è¡Œé ­
-		$obj.Name=  $clip	# clipboard
 
-		# }
+	[bool] $new= [Windows.Forms.Clipboard]::ContainsText()	# text document ƒ`ƒFƒbƒN
 
-		$tree.SelectedNode= $obj	# refocus
+	if($new){
+
+		[string] $cc= [Windows.Forms.Clipboard]::GetText([Windows.Forms.TextDataFormat]::UnicodeText)
+
+		[string[]] $doc= $cc -split "`r`n"	
+
+		$obj.Text= $doc[0]	# s“ª
+
+		$obj.Name=  $cc	# clipboard
+	}
+
+
+	$tree.SelectedNode= $obj	# refocus
+
+ } #func
+ 
+function ChildPaste([string] $sw, [bool] $new){ 
+
+	if($sw -eq "node"){
+
+		[object] $y= $script:focus
+
+		# $y.Nodes.AddRange($script:node_clip.Clone())	# ‚±‚ê‚Å‚à—Ç‚¢
+		$y.Nodes.Insert(0, $script:node_clip.Clone())	# node list object first child paste
+
+		$y.Expand()	# ŠJó‹µ
+
+		##$y.Nodes[0].Tag= 0 ## •s—v
+
+		$script:focus= $y.Nodes[0]	# refocus
+		$tree.SelectedNode= $script:focus
+
+	}else{
+		[object] $y= $script:focus
+
+		$y.Nodes.AddRange(@("Untitled"))	# ‚±‚ê‚Å‚à—Ç‚¢
+		# $y.Nodes.Insert(0, "Untitled")	# node list object first child paste
+
+		$y.Expand()	# ŠJó‹µ
+
+
+		[bool] $new= [Windows.Forms.Clipboard]::ContainsText()	# text document ƒ`ƒFƒbƒN
+
+		if($new){
+			[string] $cc= [Windows.Forms.Clipboard]::GetText([Windows.Forms.TextDataFormat]::UnicodeText)
+
+			[string[]] $dd= $cc -split "`r`n"
+
+			$y.Nodes[0].Text= $dd[0]	# s“ª
+
+			$y.Nodes[0].Name=  $cc	# clipboard
+		}
+
+		## $y.Nodes[0].Tag= 0 ## •s—v
+
+		$script:focus= $y.Nodes[0]	# refocus
+		$tree.SelectedNode= $script:focus
 	}
  } #func
  
 function TreeBuild([string] $readtext){ 
 
 
-	[string] $sentinel= "^^End_Finish$$"	# ç•ªå…µ
-	[bool] $sentinel_sw= $False		# $y.Nodes.AddRangeã‚­ãƒ£ãƒ³ã‚»ãƒ«
+	# example (?<=^@OP)[0-9]+(?=\s*=)
+
+	[string[]] $textline= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(?<=`r`n)(`t| )+?(?=`r`n)")
+	# ƒ^ƒuorƒXƒy[ƒX‚ªˆê‚ÂˆÈãÅ’Zˆê’v
+	# ‹ósAƒqƒbƒg‚ğ”z—ñ‚Ö
+
+	#write-host ("textline: "+ $textline.Length)
 
 
-	[string[]] $textdoc= $readtext -split "`r`n"	# é…åˆ—ç¢ºä¿
+	[string[]] $textdoc= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(^|(?<=`r`n(`t| )+?`r`n))(.|`r`n)*?(?=`r`n(`t| )+?`r`n)" )
+	# æ“ªoræ“Ç‚İ‹ós@.or`r`n Å’Zˆê’v@Œã“Ç‚İ‹ós
+	# –{•¶Aƒqƒbƒg‚ğ”z—ñ‚Ö
 
-	$textline= $textdoc[0..($textdoc.Length- 3)]
-	$textline+= $sentinel
-	$textline+= $textdoc[-2]
-	# EOFã‚«ãƒƒãƒˆ [-1]
+	for([int] $i= 0; $i -lt $textdoc.Length; $i++){
+		$textdoc[$i]+= "`r`n"	# Œã’i‚Ì‚½‚ßÅIs‚Ö‰üs•t—^
+	} #
+
+	#write-host ("textdoc: "+ $textdoc)
 
 
 	[string] $label= ""
-	[string] $mem= ""
 	[int] $j= 0
 
 
-	$tree.Nodes.AddRange(@("Parent Untitled"))
+	$tree.Nodes.Add("Untitled")
 
 	[object] $y= $tree.Nodes[0]
 
 
-	# $tree.Nodes[0].Text= "ãƒœãƒˆãƒ ãƒãƒ¼ãƒ‰"	# .Text - title
+	$tree.Nodes[0].Text= "ƒ{ƒgƒ€ƒm[ƒh"	# .Text - title
 
 	$y.Tag= $j
-	$script:focus= $y	# åˆæœŸã®ãƒ•ã‚©ãƒ¼ã‚«ã‚¹è¨­å®š
+	$script:focus= $y	# ‰Šú‚ÌƒtƒH[ƒJƒXİ’è
 
 	# $y.Nodes.AddRange(@("3Untitled", "4Untitled"))
 
 
-	[array] $arr= $tree, $y	# éšå±¤ã”ã¨ã®æœ€çµ‚ãƒãƒ¼ãƒ‰
-
-	write-host ("arr[1]: "+ $arr[1])
-	write-host ("arr[1].Tag: "+ $arr[1].Tag)
-	write-host ""
+	[array] $arr= $tree, $y	# ŠK‘w‚²‚Æ‚ÌÅIƒm[ƒh
 
 
 	for([int] $i= 0; $i -lt $textline.Length; $i++){
 
 
-		# ç©ºè¡Œã¨ç•ªå…µåˆ†å²
+		# –{•¶“ü—Í
+		$label= [System.Text.RegularExpressions.Regex]::Match( $textdoc[$i] , "(^|(?<=`r`n)).*(?= `t?($|`r`n))")
+		# æ“ªoræ“Ç‚İ‰üs‚Ån‚Ü‚è@ƒ^ƒCƒgƒ‹@s––orŒã“Ç‚İƒXƒy[ƒXƒ^ƒu‚ ‚é‚È‚µ‰üsAÅ‰‚Ì‚İƒqƒbƒg
+		# s––‚Íˆês•¶‘Î‰
 
-		if( $textline[$i] -eq $sentinel ){
-		# æœ€çµ‚è¡Œ[-2]ç¢ºèª
+		$y.Text= $label	# ƒ^ƒCƒgƒ‹
 
-			$sentinel_sw= $True
+		if($textdoc[$i] -match "`t`r`n"){  # s––‚Étab‚ª‚ ‚é
 
+			$script:bookmark= $y
+			# write-host ("bookmark set : "+ $script:bookmark)
+		}
 
-		}elseif( $textline[$i] -match "^`t *$"){  # `t`s* - tabã§å§‹ã¾ã‚Šã€spaceãŒã‚ã‚‹ã‹ãªã„ã‹
-		# å­ãƒãƒ¼ãƒ‰ã¸+ é–‹çŠ¶æ³ãƒã‚§ãƒƒã‚¯
-
-			$y.Name= $mem	# ã“ã“ã§å…¥åŠ›
-			write-host ("y.Name: "+ $y.Name)
-
-			$mem= ""
+		$y.Name= [System.Text.RegularExpressions.Regex]::Replace($textdoc[$i], " `t?`r`n", "`r`n")
+		# ƒXƒy[ƒXƒ^ƒus‚ÌƒSƒ~ƒJƒbƒgA`s`t?`r`n -> `r`n
 
 
-			if( $textline[$i] -match " " ){	# `s é–‹çŠ¶æ³
 
-				$y.Expand()
-				write-host ("tab child open label: "+ $textline[$i])
-			}else{
-				write-host ("tab child label: "+ $textline[$i])
+		# ‹ósˆ—
+		if( $textline[$i] -match "^`t ?$"){  # `t`s? - tab‚Ån‚Ü‚èAspace‚ª‚ ‚é‚©‚È‚¢‚©
+		# qƒm[ƒh‚Ö+ ŠJó‹µƒ`ƒFƒbƒN
+
+
+			$y.Nodes.Add("Child Untitled")		# 1ŠK‘w‰º‚Ö
+
+
+			if( $textline[$i].Contains(" ") -eq $True){	# `s ŠJó‹µ
+
+				$y.Expand()	# AddŒã
 			}
 
-			$y.Nodes.AddRange(@("Child Untitled"))		# 1éšå±¤ä¸‹ã¸
 			$y= $y.Nodes[0]
 			$j= 0
 			$y.Tag=  $j
 
-			$arr+= $y		# ä¸‹ä½éšå±¤store
+			$arr+= $y		# ‰ºˆÊŠK‘wstore
 			# write-host ("child arr: "+ $arr)
 
 
-		}elseif( $textline[$i] -match "^ $" ){  #`s - å…ˆé ­ã‚¹ãƒšãƒ¼ã‚¹è¡Œæœ«
-		# å…„å¼Ÿãƒãƒ¼ãƒ‰ç¢ºèª
+		}elseif( $textline[$i] -match "^ ( |`t)*$" ){  # ‚Ü‚¸spaceA(space | tab)‚ª‚ ‚é‚È‚µ
+		# ƒtƒH[ƒJƒXƒ^ƒu‚ ‚èAŒZ’í‚Æ‰ñ‹Aƒm[ƒhAŠJó‹µ‚Ìƒ`ƒFƒbƒN‚Í•K—v‚È‚¢
 
-			$y.Name= $mem	# ã“ã“ã§å…¥åŠ›
-			write-host ("y.Name: "+ $y.Name)
-
-			$mem= ""
-
-			if ($sentinel_sw -eq $False ){	# æœ€çµ‚è¡Œä»¥å¤–
-
-				[int] $len= $arr.Length- 1
-
-				$y= $arr[$len]
-				$j= $y.Tag	# æ·»å­—ã‚’å–å¾—
-
-
-				$y= $arr[($len- 1)]	# parent
-				$y.Nodes.AddRange(@("Next Untitled"))
-
-				$j++;
-				$y= $y.Nodes[$j]
-
-				$y.Tag= $j
-
-				$arr= $arr[0..($len)]
-				$arr[-1]= $y
-
-				# write-host ("parent arr: "+ $arr)
-				write-host ("single space:"+ $textline[$i])
-			}
-
-
-		}elseif( $textline[$i] -match "^ ( |`t)+$" ){  # ã¾ãšspaceã€(space | tab)ãŒã‚ã‚‹
-		# è¦ªãƒãƒ¼ãƒ‰ã¸ã€ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ãƒã‚§ãƒƒã‚¯ã€é–‹çŠ¶æ³ã®ãƒã‚§ãƒƒã‚¯ã¯å¿…è¦ãªã„
-
-
-			$y.Name= $mem	# ã“ã“ã§å…¥åŠ›
-			write-host ("y.Name: "+ $y.Name)
-
-			$mem= ""
-
-
-			[string] $tt= " "	# `s
 
 			if($textline[$i].Contains("`t") -eq $True){
-			# ã‚¿ãƒ–ã¾ã§ã®å€‹æ•°è¨ˆç®—
+			# ƒ^ƒu‚Ü‚Å‚ÌŒÂ”ŒvZ
 
 
 				[int] $nn= $textline[$i].IndexOf("`t")
@@ -301,39 +324,40 @@ function TreeBuild([string] $readtext){
 				[string] $dd= $textline[$i].Substring(0, $nn)
 
 
-				[int] $dt_len= [Math]::Floor($dd.Length / $tt.Length)	# åŒéšå±¤ä¸‹ã¸ã®ã‚¹ãƒšãƒ¼ã‚¹åˆ†
+				[int] $dt_len= $dd.Length	# “¯ŠK‘w‰º‚Ö‚ÌƒXƒy[ƒX•ª
 
 				$dt_len= $arr.Length- $dt_len
 
 				$y= $arr[$dt_len]
 
-				$script:focus= $y	# ãƒ•ã‚©ãƒ¼ã‚«ã‚¹è¨­å®š
-				write-host ("forcus set : "+ $y)
+				$script:focus= $y	# ƒtƒH[ƒJƒXİ’è
+				# write-host ("forcus set : "+ $script:focus)
 
-				[string] $ss= $textline[$i].Replace("`t", "")
 
-				write-host ("forcus tab found: "+ $textline[$i])
+				[string] $ss= $textline[$i].Replace("`t", "")	# ƒ^ƒuƒJƒbƒg
+
 
 			}else{
 				[string]  $ss= $textline[$i]
 
-				write-host ("space's only: "+ $textline[$i])
 			}
 
 
-			if ($sentinel_sw -eq $False ){	# æœ€çµ‚è¡Œä»¥å¤–
+			if ($i -lt $textline.Length- 1 ){	# ÅIsˆÈŠO
 
 
-				[int] $len= [Math]::Floor($ss.Length / $tt.Length)	# åŒéšå±¤ä¸‹ã¸ã®ã‚¹ãƒšãƒ¼ã‚¹åˆ†
+				[int] $len= $ss.Length	# “¯ŠK‘w‰º‚Ö‚ÌƒXƒy[ƒX•ª
 
 				$len= $arr.Length- $len
-				$y= $arr[$len]
+				$y= $arr[$len]	# ‰ñ‹Aƒm[ƒh‚Ö
 
 
-				$j= $y.Tag	# æ·»å­—ã‚’å–å¾—
+				$j= $y.Tag	# “Yš‚ğæ“¾
+
 
 				$y= $arr[($len- 1)]	# parent
-				$y.Nodes.AddRange(@("Next Untitled"))
+
+				$y.Nodes.Add("Next Untitled")
 
 				$j++;
 				$y= $y.Nodes[$j]
@@ -348,56 +372,43 @@ function TreeBuild([string] $readtext){
 
 
 		}else{
-		#def.ãƒ©ã‚¤ãƒ³å‡¦ç†
-
-			# $textline[$i]= $textline[$i].Replace(" ","")	# `s - æ­£è¦è¡¨ç¾ã®ã»ã†ãŒå®‰å…¨
-			# $y.Tag=  ("","")	# é …ç›®å¢—ã‚„ã™å ´åˆ
-			# $y.Tag[0]=  $counter
-			# $y.Tag[1]=  $mem
-
-
-			if( $textline[$i] -match " `t$" ){	# `s`t label+ bookmark
-
-
-				$label= [System.Text.RegularExpressions.Regex]::Matches( $textline[$i] , ".*(?= `t$)")	# `s`t
-				$label= $label.Trim(" ")	# exp -> last space cutting -> node in
-
-				write-host ("title+ bookmark label: "+ $label )
-				$script:bookmark= $y
-				$y.Text= $label
-
-			}elseif( $textline[$i] -match " $" ){	# `s - label
-
-
-				$label= [System.Text.RegularExpressions.Regex]::Matches( $textline[$i] , ".*(?= $)")	# `s
-				$label= $label.Trim(" ")
-
-				write-host ("title label: "+ $label )
-				$y.Text= $label
-
-
-			}elseif( $textline[$i] -match "`t$" ){	# bookmark
-
-
-				$label= [System.Text.RegularExpressions.Regex]::Matches( $textline[$i] , ".*(?=`t$)")
-				$label= $label.Trim(" ")
-
-				write-host ("bookmark label: "+ $label )
-				$script:bookmark= $y
-
-			}else{
-
-				$label= $textline[$i]
-				write-host ("def.label: "+ $label )
-			}
-
-
-			$mem+= $label+ "`r`n"	# ã“ã“ã§text add
-			$label= ""
+			write-host ("TreeBuild: ‰½‚ç‚©‚ÌƒGƒ‰[")
+			break;
 		}
 	} #
  } #func
- 
+	 
+<#		TreeBuild ‹ósˆ— 
+
+		}elseif( $textline[$i] -match "^ $" ){  #`s - æ“ªƒXƒy[ƒXs––
+		# ŒZ’íƒm[ƒhŠm”F
+
+			if ($i -lt $textline.Length- 1 ){	# ÅIsˆÈŠO
+
+				##[int] $len= $arr.Length- 1	##
+
+				$y= $arr[- 1]
+
+				$j= $y.Tag	# “Yš‚ğæ“¾
+
+
+				$y= $arr[- 2]	# parent
+				$y.Nodes.Add("Next Untitled")
+
+				$j++;
+				$y= $y.Nodes[$j]
+
+				$y.Tag= $j
+
+				## $arr= $arr[0..($arr.Length- 1)]	##•s—v
+				$arr[-1]= $y
+
+				# write-host ("parent arr: "+ $arr)
+				# write-host ("single space:"+ $textline[$i])
+			}
+
+#>
+  	
 function DocBuild($x){	# $tree 
 
 	[string] $output= ""
@@ -437,30 +448,31 @@ function DocBuild($x){	# $tree
 			}
 		} #
 
-		# ç©ºè¡Œåˆ†ã®å‡ºåŠ›
+		# ‹ós•ª‚Ìo—Í
 
-		if($y.Nodes.Count -gt 0){	# å­éšå±¤ãƒã‚§ãƒƒã‚¯
+		if($y.Nodes.Count -gt 0){	# qŠK‘wƒ`ƒFƒbƒN
 
 			$output+= "`t"	# tab
 
-			if($y.IsExpanded -eq "True"){	# nodeå±•é–‹æ™‚
+			if($y.IsExpanded -eq "True"){	# node“WŠJ
 
 				$output+= " "	# space
 			}
 
 			$output+= "`r`n"
+					#‚±‚±‚ÅAˆù‚İ‚ŞB
 
-					#ã“ã“ã§ã€é£²ã¿è¾¼ã‚€ã€‚
-			$output+= DocBuild $y 	# å†å¸°
-					#æ®µæ•°åˆ†ã€ã“ã“ã‹ã‚‰ä¸‹ã¸åãå‡ºã™ã€‚
+			$output+= DocBuild $y 	# Ä‹A
+
+					#’i”•ªA‚±‚±‚©‚ç‰º‚Ö“f‚«o‚·B
 
 			$output+= " "	# space
 
-		}else{	# å…„å¼Ÿnode
+		}else{	# ŒZ’ínode
 			$output+= " "	# space
 		}
 
-		if($focus -eq $y){	# ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚ã‚‰ã°add
+		if($focus -eq $y){	# ƒtƒH[ƒJƒX‚ ‚ç‚Îadd
 
 			$output+= "`t"	# tab
 		}
@@ -479,33 +491,43 @@ function Down_search(){
 	[array] $yy= ForwardFind $script:focus
 
 
+	[string] $rtn_str= $editbox.SelectedText		# "‚È"
 	[int] $rtn_len= $editbox.SelectionLength		# 1
-	[string] $rtn_str= $editbox.SelectedText		# "ãª"
 
 
-	[int] $dur= ([int] $editbox.SelectionStart)+ 1	# ãƒã‚¤ãƒŠã‚¹æ•°ã§$rtn= -1ã¸
+	[int] $dur= ([int] $editbox.SelectionStart)+ 1
 	# write-host $editbox.Text.Length
 
 
 	for([int] $i= 0;  $i -lt $yy.Length; $i++){
 
-		if($i -eq 0){	# åŒä¸€ãƒãƒ¼ãƒ‰
+		if($i -eq 0){	# “¯ˆêƒm[ƒh
 
 			[int] $index_rtn= $yy[$i].Name.IndexOf($rtn_str, $dur, [System.StringComparison]::OrdinalIgnoreCase)
 		}else{
-			[int] $index_rtn= $yy[$i].Name.IndexOf($rtn_str, [System.StringComparison]::OrdinalIgnoreCase) # [åˆ—æŒ™å‹] åŒºåˆ¥ã—ãªã„
+			[int] $index_rtn= $yy[$i].Name.IndexOf($rtn_str, [System.StringComparison]::OrdinalIgnoreCase) # [—ñ‹“Œ^] ‹æ•Ê‚µ‚È‚¢
 		}
 
-		if($index_rtn -eq -1){
+		if($index_rtn -eq -1){	# node“à‚ÉŒŸõŒê‚ª‚È‚¢
 
 		}else{
+			#write-host ("==="+ $script:search_node)
+			#write-host ("==="+ $script:search_index)
+
+			if($yy[$i] -eq $script:search_node ){
+				Write-Host ("- node - Restart"+ $script:search_node)
+			}
+			if($index_rtn -eq $script:search_index ){
+				Write-Host ("- index - Restart"+ $script:search_index)
+			}
+
 			$script:focus= $yy[$i]
 			$tree.SelectedNode= $script:focus	# refocus
 
 			$editbox.focus()
 			$editbox.Select($index_rtn, $rtn_len)
 
-			break;	# ã“ã“ã§ãƒ«ãƒ¼ãƒ—ãƒ–ãƒ¬ã‚¤ã‚¯
+			break;	# ‚±‚±‚Åƒ‹[ƒvƒuƒŒƒCƒN
 		}
 	} #
  } # func
@@ -515,44 +537,53 @@ function Upper_search(){
 	[array] $yy= ForwardFind $script:focus
 
 
-	$yy= $yy[$yy.Length.. 0]	# é…åˆ—åè»¢ " [array]::Reverse($yy) "ã§ã‚‚ã‚ˆã„
+	$yy= $yy[$yy.Length.. 0]	# ”z—ñ”½“] " [array]::Reverse($yy) "‚Å‚à‚æ‚¢
 
 
+	[string] $rtn_str= $editbox.SelectedText		# "‚È"
 	[int] $rtn_len= $editbox.SelectionLength		# 1
-	[string] $rtn_str= $editbox.SelectedText		# "ãª"
 
 
-	[int] $dur= ([int] $editbox.SelectionStart)- 1	# ãƒã‚¤ãƒŠã‚¹æ•°ã§$rtn= -1ã¸
+	[int] $dur= ([int] $editbox.SelectionStart)- 1
 	# write-host $editbox.Text.Length
 
 
 	for([int] $i= 0;  $i -lt $yy.Length; $i++){
 
-		if($i -eq 0){	# åŒä¸€ãƒãƒ¼ãƒ‰
-
+		if($i -eq 0){	# “¯ˆêƒm[ƒh
 
 			if($dur -ge 0){
 
 				[int] $index_rtn= $yy[$i].Name.LastIndexOf($rtn_str, $dur, [System.StringComparison]::OrdinalIgnoreCase)
 
 			}else{
-				[int] $index_rtn= -1	# breakã¸
+				[int] $index_rtn= -1	# SelectionStart= 0
 			}
 		}else{
 
-			[int] $index_rtn= $yy[$i].Name.LastIndexOf($rtn_str, [System.StringComparison]::OrdinalIgnoreCase) # [åˆ—æŒ™å‹] åŒºåˆ¥ã—ãªã„
+			[int] $index_rtn= $yy[$i].Name.LastIndexOf($rtn_str, [System.StringComparison]::OrdinalIgnoreCase) # [—ñ‹“Œ^] ‹æ•Ê‚µ‚È‚¢
 		}
 
-		if($index_rtn -eq -1){
+		if($index_rtn -eq -1){	# node“à‚ÉŒŸõŒê‚ª‚È‚¢
 
 		}else{
+			#write-host ("==="+ $script:search_node)
+			#write-host ("==="+ $script:search_index)
+
+			if($yy[$i] -eq $script:search_node ){
+				Write-Host ("- node - Restart"+ $script:search_node)
+			}
+			if($index_rtn -eq $script:search_index ){
+				Write-Host ("- index - Restart"+ $script:search_index)
+			}
+
 			$script:focus= $yy[$i]
 			$tree.SelectedNode= $script:focus	# refocus
 
 			$editbox.focus()
 			$editbox.Select($index_rtn, $rtn_len)
 
-			break;	# ã“ã“ã§ãƒ«ãƒ¼ãƒ—ãƒ–ãƒ¬ã‚¤ã‚¯
+			break;	# ‚±‚±‚Åƒ‹[ƒvƒuƒŒƒCƒN
 		}
 	} #
  } #func
@@ -567,22 +598,23 @@ $tree.HideSelection= $False
 
 $tree.Add_AfterSelect({
 
-	"------" | write-host
-	("index: "+ $this.Nodes.IndexOf($_.Node)) | write-host
-	$this.TopNode.FullPath | write-host
-	$_.Node.Parent.FullPath | write-host
-	$_.Node.PrevNode.LastNode.FullPath | write-host
-	$_.Node.PrevNode.FullPath | write-host
-	$_.Node.FullPath | write-host
-	$_.Node.NextNode.FullPath | write-host
-	$_.Node.FirstNode.FullPath | write-host
-	"------" | write-host
-	$script:focus= $_.Node
+	#"------" | write-host
+	#("index: "+ $this.Nodes.IndexOf($_.Node)) | write-host
+	#$this.TopNode.FullPath | write-host
+	#$_.Node.Parent.FullPath | write-host
+	#$_.Node.PrevNode.LastNode.FullPath | write-host
+	#$_.Node.PrevNode.FullPath | write-host
+	#$_.Node.FullPath | write-host
+	#$_.Node.NextNode.FullPath | write-host
+	#$_.Node.FirstNode.FullPath | write-host
+	#"------" | write-host
 
+	$script:focus= $_.Node
 	$counterbox.Text= $_.Node.Tag
 	$editbox.Text= $_.Node.name
 	$focusbox.Text= $script:focus
-	$bookmarkbox.Text= $script:bookmark
+
+	# $bookmarkbox.Text= $script:bookmark
  })
 
 
@@ -628,21 +660,39 @@ $editbox.WordWrap= "True"
 # $editbox.SelectionStart
 
 
+#.$editbox.Add_TextChanged({
+#
+#})
+
 $editbox.Add_Leave({
 
 	$script:focus.Name= $this.Text
-})
 
+	[string[]] $dd= $this.Text -split "`r`n"
+
+	$script:focus.Text=  $dd[0]	# s“ª
+ })
 
 $editbox.Add_MouseDown({
  try{
+	[string] $rtn= $_.Button	# $_‚ÍƒXƒCƒbƒ`‚Í’Ê‚ç‚È‚¢
+
 	switch([string] $_.Button){
 	'Right'{
 	}'Left'{
-		write-host "Left"
-		write-host $editbox.SelectionStart
-		write-host $editbox.SelectedText
-		write-host $editbox.SelectionLength
+		if($script:search_sw -eq $True){	# global ‰Šú‰»
+
+			$script:search_node=  ""
+			$script:search_index= -1
+			$script:search_sw= $False
+		}
+
+		write-host ("Button: "+ $rtn)
+		#write-host ("SelectionStart: "+ $this.SelectionStart)
+		#write-host ("SelectionLength: "+ $this.SelectionLength)
+		#write-host ("SelectedText: "+ $this.SelectedText)		# ‰EƒNƒŠƒbƒN‚È‚Ç‚Å
+
+		break;
 	}'Middle'{
 	}
 	} #sw
@@ -688,8 +738,8 @@ $bookmarkbox.AcceptsTab= "True"
 $bookmarkbox.ScrollBars= "Vertical"
  
 $counter_lbl= New-Object System.Windows.Forms.Label 
-$counter_lbl.Text= "counterbox"
-$counter_lbl.Size= "100,20"
+$counter_lbl.Text= "counterbox tree build only"
+$counter_lbl.Size= "200,20"
 $counter_lbl.Location= "210,410"
 $counter_lbl.TextAlign= "MiddleCenter"
 $counter_lbl.BorderStyle= "Fixed3D"
@@ -705,14 +755,15 @@ $counterbox.AcceptsReturn= "True"
 $counterbox.AcceptsTab= "True"
 $counterbox.ScrollBars= "Vertical"
  
-# ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆ 
-
-$contxt_03= New-Object System.Windows.Forms.ToolStripMenuItem
+# ƒRƒ“ƒeƒLƒXƒg 
+	 
+$contxt_03= New-Object System.Windows.Forms.ToolStripMenuItem 
 $contxt_03.Text= "Bookmark Select"
 $contxt_03.Add_Click({
 
 	$tree.SelectedNode= $script:bookmark
  })
+
 
 $contxt_bmk= New-Object System.Windows.Forms.ToolStripMenuItem
 $contxt_bmk.Text= "Bookmark Set"
@@ -721,8 +772,8 @@ $contxt_bmk.Add_Click({
 	$script:bookmark= $script:focus
 	$bookmarkbox.Text= $script:bookmark
  })
-
-$contxt_cut= New-Object System.Windows.Forms.ToolStripMenuItem
+ 
+$contxt_cut= New-Object System.Windows.Forms.ToolStripMenuItem 
 $contxt_cut.Text= "Cut"
 $contxt_cut.Add_Click({
 
@@ -738,18 +789,18 @@ $contxt_copy.Add_Click({
 	[Windows.Forms.Clipboard]::SetText("tree.nodes.data.flag.clipboard", [Windows.Forms.TextDataFormat]::UnicodeText)
 	$script:node_clip= $script:focus
  })
-
-$contxt_paste= New-Object System.Windows.Forms.ToolStripMenuItem
+ 
+$contxt_paste= New-Object System.Windows.Forms.ToolStripMenuItem 
 $contxt_paste.Text= "Paste"
 $contxt_paste.Add_Click({
 
-	# $contxt_paste.Enabled= [Windows.Forms.Clipboard]::ContainsText([Windows.Forms.TextDataFormat]::UnicodeText)
+	[string] $clip= [Windows.Forms.Clipboard]::GetText([Windows.Forms.TextDataFormat]::UnicodeText)
 
-	[bool] $rtn= [Windows.Forms.Clipboard]::ContainsText()	# text document ãƒã‚§ãƒƒã‚¯
+	if($clip -eq "tree.nodes.data.flag.clipboard"){
 
-	if($rtn -eq $True){
-
-		PasteSelecter ""
+		NodePaste ""
+	}else{
+		PlainPaste ""
 	}
  })
 
@@ -757,35 +808,36 @@ $contxt_add= New-Object System.Windows.Forms.ToolStripMenuItem
 $contxt_add.Text= "Add Paste"
 $contxt_add.Add_Click({
 
-	[bool] $rtn= [Windows.Forms.Clipboard]::ContainsText()
+	[string] $clip= [Windows.Forms.Clipboard]::GetText([Windows.Forms.TextDataFormat]::UnicodeText)
 
-	if($rtn -eq $True){
+	if($clip -eq "tree.nodes.data.flag.clipboard"){
 
-		PasteSelecter "add"
+		NodePaste "add"
+	}else{
+		PlainPaste "add"
 	}
  })
 
-$contxt_12= New-Object System.Windows.Forms.ToolStripMenuItem
+ 
+$contxt_12= New-Object System.Windows.Forms.ToolStripMenuItem 
 $contxt_12.Text= "Child Paste"
 $contxt_12.Add_Click({
 
-	[object] $y= $script:focus
+	[string] $clip= [Windows.Forms.Clipboard]::GetText([Windows.Forms.TextDataFormat]::UnicodeText)
 
-	# $y.Nodes.AddRange($script:node_clip.Clone())	# = insert
-	$y.Nodes.Insert(0, $script:node_clip.Clone())	# node list object first child paste
+	if($clip -eq "tree.nodes.data.flag.clipboard"){
 
-	$y.Expand()
-
-	$y.Nodes[0].Tag= 0
-
-	$script:focus= $y.Nodes[0]	# refocus
-	$tree.SelectedNode= $y.Nodes[0]
+		ChildPaste "node"
+	}else{
+		ChildPaste ""
+	}
  })
+ 
+$contxt= New-Object System.Windows.Forms.ContextMenuStrip 
 
-$contxt= New-Object System.Windows.Forms.ContextMenuStrip
 $contxt.Items.AddRange(@($contxt_bmk, $contxt_cut, $contxt_copy, $contxt_paste, $contxt_add, $contxt_12))
 $contxt.Items.Insert(0, $contxt_03) # list object
- 
+  
 $btn0= New-Object System.Windows.Forms.Button 
 $btn0.Size= "100,100"
 $btn0.Location= "210, 510"
@@ -794,7 +846,19 @@ $btn0.text= "select down search"
 
 $btn0.Add_Click({
 
+	if($script:search_sw -eq $False){
+
+		$script:search_node=  $script:focus
+		$script:search_index= $editbox.SelectionStart
+		$script:search_sw= $True
+
+		write-host ("btn0 node - "+ $script:search_node)
+		write-host ("btn0 index - "+ $script:search_index)
+	}
+
+
 	if($editbox.SelectedText -ne ""){
+
 		Down_search
 	}
  })
@@ -808,6 +872,7 @@ $btn1.text= "select upper search"
 $btn1.Add_Click({
 
 	if($editbox.SelectedText -ne ""){
+
 		Upper_search
 	}
  })
@@ -820,19 +885,20 @@ $btn2.text= "doc file write"
 
 $btn2.Add_Click({
 
-		[string] $rtn= DocBuild $tree
-		write-host ("====")
-		$rtn | write-host
-		write-host ("====")
+	$script:focus.Name= $editbox.Text
 
-		$rtn | Out-File -Encoding UTF8 -FilePath ".\TEST.txt" # UTF8
+	[string] $rtn= DocBuild $tree
+	write-host ("====")
+	$rtn | write-host
+	write-host ("====")
 
+	$rtn | Out-File -Encoding UTF8 -FilePath ".\TEST-01.txt" # UTF8
 
-		# $rtn | Out-File -Encoding oem -FilePath ".\TEST-01.txt" # shiftJIS
+	# $rtn | Out-File -Encoding oem -FilePath ".\TEST-01.txt" # shiftJIS
  })
  
 $frm= New-Object System.Windows.Forms.Form 
-$frm.Size= @(640, 660) -join "," # stringå‡ºåŠ›
+$frm.Size= @(640, 660) -join "," # stringo—Í
 $frm.Text= "TreeView"
 $frm.FormBorderStyle= "Sizable"
 $frm.StartPosition= "WindowsDefaultLocation"
@@ -847,8 +913,19 @@ $frm.TopLevel= $True
 # $frm.AllowTransparency= $True
 # $frm.Opacity = 0.5
 
-# $frm.Add_Load({
-#  })
+$frm.Add_FormClosing({
+
+	$script:focus.Name= $editbox.Text
+ })
+
+$frm.Add_Load({
+
+	TreeBuild (cat '.\TEST.txt' | Out-String)
+
+	$tree.SelectedNode= $script:focus
+	$bookmarkbox.Text= $script:bookmark
+
+ })
 
 # $frm.Add_Resize({
 #  })
@@ -864,35 +941,32 @@ $frm.Add_DragDrop({
   try{
 	[string[]] $rtn= $_.Data.GetData("FileDrop")
 
-	$script:focus= ""
-	$script:node_clip= ""
-	$script:bookmark= ""
-
-	$tree.Nodes.Clear()	# TreeNodeCollection ã‚¯ãƒ©ã‚¹
+	$tree.Nodes.Clear()	# TreeNodeCollection ƒNƒ‰ƒX
 
 	TreeBuild (cat $rtn[0] | Out-String)
 
 	$tree.SelectedNode= $script:focus
+	$bookmarkbox.Text= $script:bookmark
 
   }catch{
 	echo $_.exception
   }
 })
-
- 	
+ 
 $frm.Controls.AddRange(@($tree)) 
 $frm.Controls.AddRange(@($edit_lbl, $editbox, $focus_lbl, $focusbox, $bookmark_lbl, $bookmarkbox, $counter_lbl, $counterbox))
 $frm.Controls.AddRange(@($btn0, $btn1, $btn2))
-#ä¸‹ã¯å¾Œã‚å´
+#‰º‚ÍŒã‚ë‘¤
  
 [object] $script:focus= "" 
 [object] $script:node_clip= ""
 [object] $script:bookmark= ""
 
+[object] $script:search_node= ""
+[int] $script:search_index= -1
+[bool] $script:search_sw= $False
 
-TreeBuild (cat '.\TEST.txt' | Out-String)
-
-$tree.SelectedNode= $script:focus
+[bool] $script:test= $True
 
 $frm.ShowDialog() > $null
  
