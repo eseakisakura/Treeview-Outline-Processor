@@ -7,14 +7,14 @@ using System.Text;	// Encoding.GetEncoding を使用するのに必要
 
 class Main_form : Form
 {
-	public TreeView tree_view= new TreeView()
+	public TreeView treeview= new TreeView()
 	{
 		Size=  new Size(200, 500),
 		Location=  new Point(10, 10),
 		HideSelection= false,
 	};
 
-	TextBox edit_box= new TextBox()
+	public TextBox editbox= new TextBox()
 	{
 		Size=  new Size(400, 200),
 		Location=  new Point(220, 10),
@@ -22,11 +22,27 @@ class Main_form : Form
 		AcceptsReturn= true,
 	};
 
-	TextBox focus_box= new TextBox()
+	TextBox focusbox= new TextBox()
 	{
 		Size=  new Size(400, 100),
 		Location=  new Point(220, 220),
 		Multiline = true,
+	};
+
+	Button btn0= new Button()
+	{
+		Size=  new Size(100, 100),
+		Location=  new Point(220, 320),
+		FlatStyle= FlatStyle.Popup,
+		Text= "down search",
+	};
+
+	Button btn1= new Button()
+	{
+		Size=  new Size(100, 100),
+		Location=  new Point(220, 420),
+		FlatStyle= FlatStyle.Popup,
+		Text= "upper search",
 	};
 
 	//Text_box3 text_class3;
@@ -63,22 +79,21 @@ class Main_form : Form
 			this.DragDrop+= (sender, e)=>
 			{
 				string[] file_name= (string[]) e.Data.GetData(DataFormats.FileDrop);
-				tree_view.Nodes.Clear();	// TreeNodeCollection クラス
+				treeview.Nodes.Clear();	// TreeNodeCollection クラス
 
 				string file_txt= File.ReadAllText(file_name[0], Encoding.UTF8);
 
 				Tree_Build.TreeBuild (this,file_txt );
-				tree_view.SelectedNode= Tree_Build.focus;
+				treeview.SelectedNode= Tree_Build.focus;
 			};
 
 			string file_doc= File.ReadAllText(@".\TEST.txt", Encoding.UTF8);
 			// TreeBuild (cat '.\TEST.txt' | Out-String)
 
 			Tree_Build.TreeBuild(this, file_doc );
-			tree_view.SelectedNode= Tree_Build.focus;
+			treeview.SelectedNode= Tree_Build.focus;
 
-
-			this.Controls.AddRange(new Control[] { tree_view, edit_box, focus_box } );
+			this.Controls.AddRange(new Control[] { treeview, editbox, focusbox, btn0, btn1 } );
 
 		//	text_class2= new Text_box2(this );
 		//	text_class3= new Text_box3(this );
@@ -88,15 +103,31 @@ class Main_form : Form
 			{
 			};
 
-			tree_view.AfterSelect+= (sender, e)=>
+			treeview.AfterSelect+= (sender, e)=>
 			{
 				// Console.WriteLine("click! window test"+ e.Node.Name);
 
 				Tree_Build.focus= e.Node;
 				// counterbox.Text= e.Node.Tag;
 
-				edit_box.Text= (string) e.Node.Name;
+				editbox.Text= (string) e.Node.Name;
 				// focusbox.Text= focus;
+			};
+
+			btn0.Click+= (sender, e)=>
+			{
+				if(editbox.SelectedText != ""){
+
+					Search_Build.Down_search(this );
+				}
+			};
+
+			btn1.Click+= (sender, e)=>
+			{
+				if(editbox.SelectedText != ""){
+
+					Search_Build.Upper_search(this );
+				}
 			};
 
 		//	this.Closed+= (sender, e)=>

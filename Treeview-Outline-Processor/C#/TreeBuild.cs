@@ -2,12 +2,12 @@ using System;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 
-// 正規表現で、配列をれば良い
 
 class Tree_Build	// static
 {
 	static public TreeNode focus;		// ストアフォーカス
 	static public TreeNode bookmark;	// インスタンス共有となるため、クラス名でアクセス
+
 
 	static string[] Match_string(MatchCollection mc)
 	{
@@ -23,7 +23,7 @@ class Tree_Build	// static
 	static public void TreeBuild(Main_form parent, string readtext )
 	{
  
-		TreeView tree= parent.tree_view;
+		TreeView tree= parent.treeview;		// 参照
 
 		// example (?<=^@OP)[0-9]+(?=\s*=)
 
@@ -73,7 +73,7 @@ class Tree_Build	// static
 			Match m= Regex.Match( textdoc[i] , "(^|(?<=\r\n)).*(?= \t?($|\r\n))");
 			y.Text= (string) m.Value; 
 			// 先頭or先読み改行で始まり　タイトル　行末or後読みスペースタブあるなし改行、最初のみヒット
-			// 行末は一行文対応
+			// 行末は一行文対応ため
 
 			if(Regex.IsMatch(textdoc[i], "\t\r\n") == true){  // 行末にtabがある
 
@@ -126,7 +126,7 @@ class Tree_Build	// static
 					y= (TreeNode) arr_node[dt_len];
 
 					focus= y;	// フォーカス設定
-					Console.WriteLine("Tree-Build focus: "+ focus );
+					// Console.WriteLine("Tree-Build focus: "+ focus );
 
 					ss= textline[i].Replace("\t", "");	// タブカット
 
