@@ -8,91 +8,6 @@ Add-Type -AssemblyName System.Drawing > $null
 cd (Split-Path -Parent $MyInvocation.MyCommand.Path)
 [Environment]::CurrentDirectory= pwd # working_dir set
  
-function ForwardFind($x){ 
-
-	$y= $x			# $script:focus
-
-	[array] $stuck= @($x)	# 最初にforcusノードから入れる
-
-	[int] $i= 0
-	[int] $sw= 1
-	# for([int] $i= 0; $i -lt 20; $i++){
-	while(1){
-
-		if($i -gt 5000){
-
-			[string] $qq= "検索ノードが、5000を超えました"
-
-			Write-Host $qq
-
-			#[string] $retn=  [Windows.Forms.MessageBox]::Show(
-			#$qq, "確認", "OK","Information","Button1"
-			#)
-
-			break;	# 強制終了
-		}
-
-		if($sw -eq 1){
-
-			if($y.FirstNode -ne $null){
-
-				$y= $y.FirstNode	# 最初の子ツリー ノード
-				#("FirstNodefullpath: "+$y.FullPath) | write-host
-
-				if($y -eq $x){ break; }
-
-				$stuck+= $y
-
-			}elseif($y.NextNode -ne $null){
-
-				$y= $y.NextNode	# 兄弟ツリー ノード
-				#("NextNodefullpath: "+$y.FullPath) | write-host
-
-				if($y -eq $x){ break; }
-
-				$stuck+= $y
-			}else{
-
-				$sw= 0
-			}
-
-		}else{
-			if($y.Parent.NextNode -ne $null){
-
-				$y= $y.Parent.NextNode	# 親の兄弟ノード
-				#("Parent.NextNodefullpath: "+$y.FullPath) | write-host
-
-				if($y -eq $x){ break; }
-
-				$stuck+= $y
-				$sw= 1
-
-			}else{
-				if($y.Level -gt 0){	# トップノード以外
-
-					$y= $y.Parent	# いったん親へ戻る
-
-				}else{
-					$y= $tree.TopNode
-					#("tree.TopNodefullpath: "+ $y.FullPath) | write-host
-
-					if($y -eq $x){ break; }
-
-					$stuck+= $y
-					$sw= 1
-				}
-			}
-		}
-
-
-		$i++;
-
-	} #
-
-	$stuck+= $x	# 最後に回帰ノード検索分
-	return $stuck
- } #func
- 
 function NodePaste([string] $sw){ 
 
 	if($script:focus.Level -eq 0){	# $script:focus.Parent -eq $nullのため
@@ -249,7 +164,7 @@ function TreeBuild([string] $readtext){
 	#write-host ("textdoc: "+ $textdoc)
 
 
-	[string] $label= ""
+	# [string] $label= ""
 	[int] $j= 0
 
 
@@ -271,13 +186,15 @@ function TreeBuild([string] $readtext){
 
 	for([int] $i= 0; $i -lt $textline.Length; $i++){
 
-
 		# 本文入力
-		$label= [System.Text.RegularExpressions.Regex]::Match( $textdoc[$i] , "(^|(?<=`r`n)).*(?= `t?($|`r`n))")
-		# 先頭or先読み改行で始まり　タイトル　行末or後読みスペースタブあるなし改行、最初のみヒット
-		# 行末は一行文対応
 
-		$y.Text= $label	# タイトル
+
+		$y.Text= [System.Text.RegularExpressions.Regex]::Match( $textdoc[$i] , "(^|(?<=`r`n)).*(?= `t?($|`r`n))")
+		# タイトル
+
+		# 先頭or先読み改行で始まり　タイトル　行末or後読みスペースタブあるなし改行、最初のみヒット
+		# 行末は一行文対応ため
+
 
 		if($textdoc[$i] -match "`t`r`n"){  # 行末にtabがある
 
@@ -408,7 +325,7 @@ function TreeBuild([string] $readtext){
 			}
 
 #>
-  	
+  
 function DocBuild($x){	# $tree 
 
 	[string] $output= ""
@@ -486,9 +403,98 @@ function DocBuild($x){	# $tree
 	return $output
  } # func
  
+function ForwardFind($x){ 
+
+	$y= $x			# $script:focus
+
+	[array] $stuck= @($x)	# 最初にforcusノードから入れる
+
+	[int] $i= 0
+	[int] $sw= 1
+	# for([int] $i= 0; $i -lt 20; $i++){
+	while(1){
+
+		if($i -gt 5000){
+
+			[string] $qq= "検索ノードが、5000を超えました"
+
+			Write-Host $qq
+
+			#[string] $retn=  [Windows.Forms.MessageBox]::Show(
+			#$qq, "確認", "OK","Information","Button1"
+			#)
+
+			break;	# 強制終了
+		}
+
+		if($sw -eq 1){
+
+			if($y.FirstNode -ne $null){
+
+				$y= $y.FirstNode	# 最初の子ツリー ノード
+				#("FirstNodefullpath: "+$y.FullPath) | write-host
+
+				if($y -eq $x){ break; }
+
+				$stuck+= $y
+
+			}elseif($y.NextNode -ne $null){
+
+				$y= $y.NextNode	# 兄弟ツリー ノード
+				#("NextNodefullpath: "+$y.FullPath) | write-host
+
+				if($y -eq $x){ break; }
+
+				$stuck+= $y
+			}else{
+
+				$sw= 0
+			}
+
+		}else{
+			if($y.Parent.NextNode -ne $null){
+
+				$y= $y.Parent.NextNode	# 親の兄弟ノード
+				#("Parent.NextNodefullpath: "+$y.FullPath) | write-host
+
+				if($y -eq $x){ break; }
+
+				$stuck+= $y
+				$sw= 1
+
+			}else{
+				if($y.Level -gt 1){	# トップノード以外 <- 0だとエラー
+
+					$y= $y.Parent	# いったん親へ戻る
+
+				}else{
+					$y= $tree.TopNode
+					#("tree.TopNodefullpath: "+ $y.FullPath) | write-host
+
+					if($y -eq $x){ break; }
+
+					$stuck+= $y
+					$sw= 1
+				}
+			}
+		}
+
+
+		$i++;
+
+	} #
+
+	$stuck+= $x	# 最後に回帰ノード検索分
+	return $stuck
+ } #func
+ 
 function Down_search(){ 
 
 	[array] $yy= ForwardFind $script:focus
+
+
+	$search_node=  $script:focus
+	$search_index= $editbox.SelectionStart
 
 
 	[string] $rtn_str= $editbox.SelectedText		# "な"
@@ -514,12 +520,12 @@ function Down_search(){
 			#write-host ("==="+ $script:search_node)
 			#write-host ("==="+ $script:search_index)
 
-			if($yy[$i] -eq $script:search_node ){
-				Write-Host ("- node - Restart"+ $script:search_node)
-			}
-			if($index_rtn -eq $script:search_index ){
-				Write-Host ("- index - Restart"+ $script:search_index)
-			}
+			#if($yy[$i] -eq $script:search_node ){
+			#	Write-Host ("- node - Restart"+ $script:search_node)
+			#}
+			#if($index_rtn -eq $script:search_index ){
+			#	Write-Host ("- index - Restart"+ $script:search_index)
+			#}
 
 			$script:focus= $yy[$i]
 			$tree.SelectedNode= $script:focus	# refocus
@@ -538,6 +544,10 @@ function Upper_search(){
 
 
 	$yy= $yy[$yy.Length.. 0]	# 配列反転 " [array]::Reverse($yy) "でもよい
+
+
+	$search_node=  $script:focus
+	$search_index= $editbox.SelectionStart
 
 
 	[string] $rtn_str= $editbox.SelectedText		# "な"
@@ -570,12 +580,12 @@ function Upper_search(){
 			#write-host ("==="+ $script:search_node)
 			#write-host ("==="+ $script:search_index)
 
-			if($yy[$i] -eq $script:search_node ){
-				Write-Host ("- node - Restart"+ $script:search_node)
-			}
-			if($index_rtn -eq $script:search_index ){
-				Write-Host ("- index - Restart"+ $script:search_index)
-			}
+			#if($yy[$i] -eq $script:search_node ){
+			#	Write-Host ("- node - Restart"+ $script:search_node)
+			#}
+			#if($index_rtn -eq $script:search_index ){
+			#	Write-Host ("- index - Restart"+ $script:search_index)
+			#}
 
 			$script:focus= $yy[$i]
 			$tree.SelectedNode= $script:focus	# refocus
@@ -680,13 +690,6 @@ $editbox.Add_MouseDown({
 	switch([string] $_.Button){
 	'Right'{
 	}'Left'{
-		if($script:search_sw -eq $True){	# global 初期化
-
-			$script:search_node=  ""
-			$script:search_index= -1
-			$script:search_sw= $False
-		}
-
 		write-host ("Button: "+ $rtn)
 		#write-host ("SelectionStart: "+ $this.SelectionStart)
 		#write-host ("SelectionLength: "+ $this.SelectionLength)
@@ -846,17 +849,6 @@ $btn0.text= "select down search"
 
 $btn0.Add_Click({
 
-	if($script:search_sw -eq $False){
-
-		$script:search_node=  $script:focus
-		$script:search_index= $editbox.SelectionStart
-		$script:search_sw= $True
-
-		write-host ("btn0 node - "+ $script:search_node)
-		write-host ("btn0 index - "+ $script:search_index)
-	}
-
-
 	if($editbox.SelectedText -ne ""){
 
 		Down_search
@@ -962,13 +954,10 @@ $frm.Controls.AddRange(@($btn0, $btn1, $btn2))
 [object] $script:node_clip= ""
 [object] $script:bookmark= ""
 
-[object] $script:search_node= ""
-[int] $script:search_index= -1
-[bool] $script:search_sw= $False
 
 [bool] $script:test= $True
 
 $frm.ShowDialog() > $null
- 
+ 	
 read-host "pause" 
  
