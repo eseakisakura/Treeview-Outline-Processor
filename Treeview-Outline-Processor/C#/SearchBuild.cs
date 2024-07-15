@@ -11,7 +11,7 @@ class Search_Build	// static
 	static public object[] ForwardFind(Main_form parent, TreeNode x)
 	{
 
-		TreeView tree= parent.treeview;
+		TreeView tree= parent.tools.treeview;
 		TreeNode y= x;
 		object[] stuck= new object[1] { x };	// 最初にforcusノードから入れる
 
@@ -109,21 +109,23 @@ class Search_Build	// static
 
 	static public void Down_search(Main_form parent )
 	{
+		TextBox editbox= parent.tools.editbox;
+
  		object[] yrr= Search_Build.ForwardFind(parent, Tree_Build.focus);
 
 
 		search_node=  Tree_Build.focus;
-		search_index= parent.editbox.SelectionStart;
+		search_index= editbox.SelectionStart;
 
-		TreeView tree= parent.treeview;
-
-
-		string rtn_str= parent.editbox.SelectedText;		// "な"
-		int rtn_len= parent.editbox.SelectionLength;		// 1
+		TreeView tree= parent.tools.treeview;
 
 
-		int dur= ((int) parent.editbox.SelectionStart)+ 1;
-		// Console.WriteLine(parent.editbox.Text.Length);
+		string rtn_str= editbox.SelectedText;		// "な"
+		int rtn_len= editbox.SelectionLength;		// 1
+
+
+		int dur= ((int) editbox.SelectionStart)+ 1;
+		// Console.WriteLine(editbox.Text.Length);
 
 
 		for(int i= 0;  i < yrr.Length; i++){
@@ -148,8 +150,8 @@ class Search_Build	// static
 				Tree_Build.focus= (TreeNode) yrr[i];
 				tree.SelectedNode= Tree_Build.focus;	// refocus
 
-				parent.editbox.Focus();
-				parent.editbox.Select(index_rtn, rtn_len);
+				editbox.Focus();
+				editbox.Select(index_rtn, rtn_len);
 
 				break;	// ここでループブレイク
 			}
@@ -159,23 +161,25 @@ class Search_Build	// static
 
 	static public void Upper_search(Main_form parent )
 	{
+		TreeView tree= parent.tools.treeview;
+
+		TextBox editbox= parent.tools.editbox;
+
+
 		object[] yrr= Search_Build.ForwardFind(parent, Tree_Build.focus);
 
 		Array.Reverse(yrr);
 
 
 		search_node=  Tree_Build.focus;
-		search_index= parent.editbox.SelectionStart;
+		search_index= editbox.SelectionStart;
 
-		TreeView tree= parent.treeview;
-
-
-		string rtn_str= parent.editbox.SelectedText;		// "な"
-		int rtn_len= parent.editbox.SelectionLength;		// 1
+		string rtn_str= editbox.SelectedText;		// "な"
+		int rtn_len= editbox.SelectionLength;		// 1
 
 
-		int dur= ((int) parent.editbox.SelectionStart)- 1;
-		// Console.WriteLine(parent.editbox.Text.Length);
+		int dur= ((int) editbox.SelectionStart)- 1;
+		// Console.WriteLine(editbox.Text.Length);
 
 		for(int i= 0;  i < yrr.Length; i++){
 
@@ -205,8 +209,8 @@ class Search_Build	// static
 				Tree_Build.focus= (TreeNode) yrr[i];
 				tree.SelectedNode= Tree_Build.focus;	// refocus
 
-				parent.editbox.Focus();
-				parent.editbox.Select(index_rtn, rtn_len);
+				editbox.Focus();
+				editbox.Select(index_rtn, rtn_len);
 
 				break;	// ここでループブレイク
 			}

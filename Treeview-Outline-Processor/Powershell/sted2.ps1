@@ -1,6 +1,5 @@
-# counter boxのナンバー出力 
- 
-# タイトル位置の変更　組み込み 
+# 高速化手法	ライン処理 -> 正規表現で抽出 
+#		スタック -> 再帰
  
 Add-Type -AssemblyName System.Windows.Forms > $null 
 Add-Type -AssemblyName System.Drawing > $null
@@ -351,7 +350,7 @@ function DocBuild($x){	# $tree
 
 		for([int] $j= 0; $j -lt $arr.Length; $j++){	# $y.Name
 
-			$output+= $arr[$j]
+			$output+= $arr[$j]	# string++
 
 			if($y.Text -eq $arr[$j]){	# title line
 
@@ -630,8 +629,6 @@ $tree.Add_AfterSelect({
 
 $tree.Add_MouseDown({
  try{
-	[string] $rtn= ""
-
 	switch([string] $_.Button){
 	'Left'{	break;
 	}'Right'{
@@ -958,6 +955,6 @@ $frm.Controls.AddRange(@($btn0, $btn1, $btn2))
 [bool] $script:test= $True
 
 $frm.ShowDialog() > $null
- 	
+ 
 read-host "pause" 
  

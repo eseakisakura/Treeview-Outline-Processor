@@ -7,7 +7,159 @@ class Tree_Build	// static
 {
 	static public TreeNode focus;		// ストアフォーカス
 	static public TreeNode bookmark;	// インスタンス共有となるため、クラス名でアクセス
+	static public TreeNode node_clip;
 
+	static string DocNode(TreeNode x ){	// tree
+
+		TreeNode y;
+
+		string output= "";
+
+		// $x.Nodes.Count | write-host
+		for( int i= 0; i < x.Nodes.Count; i++){
+
+		 	y= x.Nodes[i];
+
+			string bmk= "";
+
+			if(bookmark == y ){
+				bmk= "\t";	// tab
+			}
+
+			// write-host("fullpath: "+ $y.FullPath)
+			string[] arr= y.Name.Split(new string[] { "\r\n" },  StringSplitOptions.None);
+
+			for(int j= 0; j < arr.Length; j++){	// y.Name
+			// 本文出力
+
+				output+= arr[j];	// string++
+
+				if(y.Text == arr[j]){	// title line
+
+					output+= " ";	// space
+					output+= bmk;
+				}
+
+				if( j != (arr.Length- 1) ){	// max count
+
+					output+= "\r\n";
+				}
+			} //
+
+			// 空行分の出力
+			if(y.Nodes.Count > 0){	// 子階層チェック
+
+				output+= "\t";	// tab
+
+				if(y.IsExpanded == true){	// node展開時
+
+					output+= " ";	// space
+				}
+
+				output+= "\r\n";
+				//					// ここで、飲み込む。
+
+				output+= DocNode(y );	// 再帰
+
+				//					// 段数分、ここから下へ吐き出す。
+
+				output+= " ";	// space
+
+			}else{			// 兄弟node
+
+				output+= " ";	// space
+			}
+
+			if(focus == y){		// フォーカスあらばadd
+
+				output+= "\t";	// tab
+			}
+
+			if( i < (x.Nodes.Count- 1) ){	// max count
+
+				output+= "\r\n";
+			}
+		} // 
+
+		return output;
+
+	} // method
+
+	static public string DocBuild(TreeView x ){	// tree
+
+		TreeNode y;
+
+		string output= "";
+
+		// $x.Nodes.Count | write-host
+		for( int i= 0; i < x.Nodes.Count; i++){
+
+		 	y= x.Nodes[i];
+
+			string bmk= "";
+
+			if(bookmark == y ){
+				bmk= "\t";	// tab
+			}
+
+			// write-host("fullpath: "+ $y.FullPath)
+			string[] arr= y.Name.Split(new string[] { "\r\n" },  StringSplitOptions.None);
+
+			for(int j= 0; j < arr.Length; j++){	// y.Name
+			// 本文出力
+
+				output+= arr[j];	// string++
+
+				if(y.Text == arr[j]){	// title line
+
+					output+= " ";	// space
+					output+= bmk;
+				}
+
+				if( j != (arr.Length- 1) ){	// max count
+
+					output+= "\r\n";
+				}
+			} //
+
+			// 空行分の出力
+			if(y.Nodes.Count > 0){	// 子階層チェック
+
+				output+= "\t";	// tab
+
+				if(y.IsExpanded == true){	// node展開時
+
+					output+= " ";	// space
+				}
+
+				output+= "\r\n";
+				//					// ここで、飲み込む。
+
+				output+= DocNode(y );	// 再帰
+
+				//					// 段数分、ここから下へ吐き出す。
+
+				output+= " ";	// space
+
+			}else{			// 兄弟node
+
+				output+= " ";	// space
+			}
+
+			if(focus == y){		// フォーカスあらばadd
+
+				output+= "\t";	// tab
+			}
+
+			if( i < (x.Nodes.Count- 1) ){	// max count
+
+				output+= "\r\n";
+			}
+		} // 
+
+		return output;
+
+	} // method
 
 	static string[] Match_string(MatchCollection mc)
 	{
@@ -18,18 +170,18 @@ class Tree_Build	// static
 			ss[ss.Length- 1]= t.Value;
 		} //
 		return ss;
-	}
+	} // method
 	
 	static public void TreeBuild(Main_form parent, string readtext )
 	{
  
-		TreeView tree= parent.treeview;		// 参照
+		TreeView tree= parent.tools.treeview;		// 参照
 
 		// example (?<=^@OP)[0-9]+(?=\s*=)
 
  		MatchCollection mca= Regex.Matches(readtext , "(?<=\r\n)(\t| )+?(?=\r\n)");
 		// タブorスペースが一つ以上最短一致
-		// 空行、ヒットを配列へ
+		// 空行、ヒットを配列へ //
 
 		// Console.WriteLine("mca: "+ mca.Count);
 		string[] textline= Match_string(mca );
@@ -37,7 +189,7 @@ class Tree_Build	// static
 
 		MatchCollection mcb= Regex.Matches(readtext , "(^|(?<=\r\n(\t| )+?\r\n))(.|\r\n)*?(?=\r\n(\t| )+?\r\n)" );
 		// 先頭or先読み空行　.or`r`n 最短一致　後読み空行
-		// 本文、ヒットを配列へ
+		// 本文、ヒットを配列へ //
 
 		// Console.WriteLine("mcb: "+ mcb.Count);
 		string[] textdoc= Match_string(mcb );
@@ -51,7 +203,7 @@ class Tree_Build	// static
 
 		tree.Nodes.Add("Parent Untitled");
 
-		TreeNode y= tree.Nodes[0];
+		TreeNode y= tree.Nodes[0];	// node 単体
 
 		tree.Nodes[0].Text= "ボトムノード";	// .Text - title
 
@@ -61,8 +213,8 @@ class Tree_Build	// static
 		// y.Nodes.AddRange(new TreeNode[] {y, y} );
 
 		object[] arr_node= new object[2] { tree, y };	// 配列初期化
-		// arr_node	tree		child	2nd child	3rd child
-		//					brother	brother		brother
+		// arr_node	tree		child		2nd child	3rd child
+		//					brother		brother		brother
 
 
 		for(int i= 0; i < textline.Length; i++){
