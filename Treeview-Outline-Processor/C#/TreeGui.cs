@@ -188,16 +188,23 @@ class GUI_tools
 
 		btn2.Click+= (sender, e)=>
 		{
-			string st= Tree_Build.DocNode(treeview );
-			// Console.WriteLine("====");
-			// Console.WriteLine("file output: "+ st);
-			// Console.WriteLine("====");
+			try{
+				string st= Tree_Build.DocNode(treeview );
+				// Console.WriteLine("====");
+				// Console.WriteLine("file output: "+ st);
+				// Console.WriteLine("====");
 
-			// $rtn | Out-File -Encoding UTF8 -FilePath ".\TEST-01.txt" # UTF8
-			StreamWriter wr = new StreamWriter(@".\test-1.txt", false, Encoding.UTF8);
+				// $rtn | Out-File -Encoding UTF8 -FilePath ".\TEST-01.txt" # UTF8
+				StreamWriter wr = new StreamWriter(@".\test-1.txt", false, Encoding.UTF8);
 
-			wr.WriteLine(st);	// Out-File同様終端改行が付加
-			wr.Close();	// file close
+				wr.WriteLine(st);	// Out-File同様終端改行が付加
+				wr.Close();	// file close
+
+			}catch (Exception ex){
+
+				Console.WriteLine("btn2 - ERR: StreamWriter >");
+				Console.WriteLine(ex);
+ 			}
 		};
 
 		parent.Controls.AddRange(new Control[] { treeview, edit_lbl, editbox, focus_lbl,focusbox, bookmark_lbl,bookmarkbox, counter_lbl, counterbox } );

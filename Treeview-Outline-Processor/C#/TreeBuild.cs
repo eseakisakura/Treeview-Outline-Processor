@@ -2,9 +2,6 @@ using System;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 
-// treebuild 最終改行がなくても、最終ノードに取り込める
-//  docnode 最終改行を出力する
-
 
 class Tree_Build	// static
 {
@@ -157,7 +154,8 @@ class Tree_Build	// static
 			}
 
 			if( i < (x.Nodes.Count- 1) ){	// max count
-			output+= "\r\n";
+
+				output+= "\r\n";
 			}
 		} // 
 
@@ -175,7 +173,7 @@ class Tree_Build	// static
 		} //
 		return ss;
 	} // method
-	
+
 	static public void TreeBuild(Main_form parent, string readtext )
 	{
  
@@ -228,7 +226,7 @@ class Tree_Build	// static
 
 			// タイトル
 			Match m= Regex.Match( textdoc[i] , "(^|(?<=\r\n)).*(?= \t?($|\r\n))");
-			// 先読み(先頭or改行で始まり)　タイトル読込み　後読み(スペースタブあるなし 行末or改行)
+			// 先頭or(先読み 改行) タイトル読込み (後読み スペースタブあるなし 行末or改行)
 			// 行末は一行文対応ため
 
 			y.Text= (string) m.Value; 

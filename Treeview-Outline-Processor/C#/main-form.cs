@@ -49,28 +49,6 @@ class Main_form : Form
 
 			// this.Controls.AddRange(new Control[] {  } );
 
-
-			this.MouseDown+= (sender, e)=>
-			{
-			};
-
-			this.DragEnter+= (sender, e)=>
-			{
-				e.Effect= DragDropEffects.All;
-			};
-
-			this.DragDrop+= (sender, e)=>
-			{
-				string[] file_name= (string[]) e.Data.GetData(DataFormats.FileDrop);
-				tools.treeview.Nodes.Clear();	// TreeNodeCollection クラス
-
-				string file_txt= File.ReadAllText(file_name[0], Encoding.UTF8);
-
-				Tree_Build.TreeBuild (this,file_txt );
-				tools.treeview.SelectedNode= Tree_Build.focus;
-			};
-
-
 		}catch (Exception ex){
 
 			Console.WriteLine("ERR: main-window-constructor >");
@@ -78,5 +56,26 @@ class Main_form : Form
 		}finally{
 			// this.Dispose();
 		}
+
+
+		this.MouseDown+= (sender, e)=>
+		{
+		};
+
+		this.DragEnter+= (sender, e)=>
+		{
+			e.Effect= DragDropEffects.All;
+		};
+
+		this.DragDrop+= (sender, e)=>
+		{
+			string[] file_name= (string[]) e.Data.GetData(DataFormats.FileDrop);
+			tools.treeview.Nodes.Clear();	// TreeNodeCollection クラス
+
+			string file_txt= File.ReadAllText(file_name[0], Encoding.UTF8);
+
+			Tree_Build.TreeBuild (this,file_txt );
+			tools.treeview.SelectedNode= Tree_Build.focus;
+		};
 	}
 }	//class
