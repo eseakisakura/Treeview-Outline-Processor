@@ -48,7 +48,7 @@ $ref[2]= $reference+ "\WPF\PresentationFramework.dll"
 $ref[3]= $reference+ "\System.Xaml.dll"
 
 #csc -reference:C:\Windows\Microsoft.NET\Framework\v4.0.30319\WPF\WindowsBase.dll -reference:C:\Windows\Microsoft.NET\Framework\v4.0.30319\WPF\PresentationCore.dll -out:$exe_path $Args[0]
-csc -reference:$ref[0] -reference:$ref[1] -reference:$ref[2] -reference:$ref[3] -optimize+ -out:wpf-test.exe .\*.cs
+csc -reference:$ref[0] -reference:$ref[1] -reference:$ref[2] -reference:$ref[3] -optimize+ -out:structured-test.exe .\*.cs
 read-host "pause"
 
 .\wpf-test.exe

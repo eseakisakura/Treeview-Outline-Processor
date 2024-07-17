@@ -2,6 +2,9 @@ using System;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 
+// treebuild 最終改行がなくても、最終ノードに取り込める
+//  docnode 最終改行を出力する
+
 
 class Tree_Build	// static
 {
@@ -9,13 +12,13 @@ class Tree_Build	// static
 	static public TreeNode bookmark;	// インスタンス共有となるため、クラス名でアクセス
 	static public TreeNode node_clip;
 
-	static string DocNode(TreeNode x ){	// tree
-
+	static public string DocNode( TreeNode x )	// treenode -> treenode overload
+	{
 		TreeNode y;
 
 		string output= "";
 
-		// $x.Nodes.Count | write-host
+		// Console.WriteLine(x.Nodes.Count);
 		for( int i= 0; i < x.Nodes.Count; i++){
 
 		 	y= x.Nodes[i];
@@ -85,13 +88,15 @@ class Tree_Build	// static
 
 	} // method
 
-	static public string DocBuild(TreeView x ){	// tree
+	static public string DocNode( TreeView x )	// treeview -> treenode overload
+	{
+		// Console.WriteLine(x.GetType());	// 変数型チェック
 
 		TreeNode y;
 
 		string output= "";
 
-		// $x.Nodes.Count | write-host
+		// Console.WriteLine(x.Nodes.Count);
 		for( int i= 0; i < x.Nodes.Count; i++){
 
 		 	y= x.Nodes[i];
@@ -117,7 +122,6 @@ class Tree_Build	// static
 				}
 
 				if( j != (arr.Length- 1) ){	// max count
-
 					output+= "\r\n";
 				}
 			} //
@@ -141,7 +145,8 @@ class Tree_Build	// static
 
 				output+= " ";	// space
 
-			}else{			// 兄弟node
+
+			}else{			// 兄弟node後、再ループで子階層チェックへ
 
 				output+= " ";	// space
 			}
@@ -152,8 +157,7 @@ class Tree_Build	// static
 			}
 
 			if( i < (x.Nodes.Count- 1) ){	// max count
-
-				output+= "\r\n";
+			output+= "\r\n";
 			}
 		} // 
 
@@ -179,16 +183,16 @@ class Tree_Build	// static
 
 		// example (?<=^@OP)[0-9]+(?=\s*=)
 
- 		MatchCollection mca= Regex.Matches(readtext , "(?<=\r\n)(\t| )+?(?=\r\n)");
-		// タブorスペースが一つ以上最短一致
+ 		MatchCollection mca= Regex.Matches(readtext , "(?<=\r\n)(\t| )+?($|(?=\r\n))");
+		// (先読み 改行) タブorスペースが一つ以上最短一致 行末or(後読み 改行)
 		// 空行、ヒットを配列へ //
 
 		// Console.WriteLine("mca: "+ mca.Count);
 		string[] textline= Match_string(mca );
 
 
-		MatchCollection mcb= Regex.Matches(readtext , "(^|(?<=\r\n(\t| )+?\r\n))(.|\r\n)*?(?=\r\n(\t| )+?\r\n)" );
-		// 先頭or先読み空行　.or`r`n 最短一致　後読み空行
+		MatchCollection mcb= Regex.Matches(readtext , "(^|(?<=\r\n(\t| )+?\r\n))(.|\r\n)+?(?=\r\n(\t| )+?(\r\n)?)" );
+		// 先頭or(先読み空行分) 任意or`r`nが一つ以上最短一致 (後読み空行分 - 改行あるなし)
 		// 本文、ヒットを配列へ //
 
 		// Console.WriteLine("mcb: "+ mcb.Count);
@@ -202,17 +206,18 @@ class Tree_Build	// static
 		int j= 0;
 
 		tree.Nodes.Add("Parent Untitled");
+		// tree.Nodes.Insert(0, "Parent Untitled");	// エラーとなる
 
 		TreeNode y= tree.Nodes[0];	// node 単体
 
-		tree.Nodes[0].Text= "ボトムノード";	// .Text - title
+		// tree.Nodes[0].Text= "Bottom Untitled";	// .Text - title
 
-		y.Tag= j;
+		y.Tag=  j;
 		focus= y;		// 初期のフォーカス設定
 
 		// y.Nodes.AddRange(new TreeNode[] {y, y} );
 
-		object[] arr_node= new object[2] { tree, y };	// 配列初期化
+		object[] arr= new object[2] { tree, y };	// 配列初期化
 		// arr_node	tree		child		2nd child	3rd child
 		//					brother		brother		brother
 
@@ -223,9 +228,10 @@ class Tree_Build	// static
 
 			// タイトル
 			Match m= Regex.Match( textdoc[i] , "(^|(?<=\r\n)).*(?= \t?($|\r\n))");
-			y.Text= (string) m.Value; 
-			// 先頭or先読み改行で始まり　タイトル　行末or後読みスペースタブあるなし改行、最初のみヒット
+			// 先読み(先頭or改行で始まり)　タイトル読込み　後読み(スペースタブあるなし 行末or改行)
 			// 行末は一行文対応ため
+
+			y.Text= (string) m.Value; 
 
 			if(Regex.IsMatch(textdoc[i], "\t\r\n") == true){  // 行末にtabがある
 
@@ -237,8 +243,8 @@ class Tree_Build	// static
 			// スペースタブ行のゴミカット、`s`t?`r`n -> `r`n
 
 
-			//空行処理 //
-			if(Regex.IsMatch( textline[i], "^\t ?$") == true){  // `t`s? - tabで始まり、spaceがあるかないか
+			//以降空行処理 //
+			if(Regex.IsMatch( textline[i], "^\t ?$") == true){  // `t`s? - tabで始まりspaceあるなし
 			// 子ノードへ+ 開状況チェック
 
 
@@ -252,10 +258,10 @@ class Tree_Build	// static
 
 				y= y.Nodes[0];
 				j= 0;
-				y.Tag=  j;
+				y.Tag= j;
 
-				Array.Resize(ref arr_node, arr_node.Length+ 1 );
-				arr_node[arr_node.Length- 1]= y;
+				Array.Resize(ref arr, arr.Length+ 1 );
+				arr[arr.Length- 1]= y;
 
 				// arr+= y		// 下位階層store
 				// Console.WriteLine("child arr: "+ arr)
@@ -273,9 +279,9 @@ class Tree_Build	// static
 					string dd= textline[i].Substring(0, nn);
 					int dt_len= dd.Length;		// スペース分、階層下へ
 
-					dt_len= arr_node.Length- dt_len;
+					dt_len= arr.Length- dt_len;
 
-					y= (TreeNode) arr_node[dt_len];
+					y= (TreeNode) arr[dt_len];
 
 					focus= y;	// フォーカス設定
 					// Console.WriteLine("Tree-Build focus: "+ focus );
@@ -289,16 +295,16 @@ class Tree_Build	// static
 				if (i < textline.Length- 1 ){	// 最終行以外
 
 					int len= ss.Length;		// スペース分、同階層下へ
-					len= arr_node.Length- len;
+					len= arr.Length- len;
 					// Console.WriteLine("Tree-Build Len: "+ len);
 
-					y= (TreeNode) arr_node[len];
+					y= (TreeNode) arr[len];
 
 					j= (int) y.Tag;		// 添字を取得
 
 					if(len > 1){	// $script:focus.Parent -eq $nullのため
 
-						y= (TreeNode) arr_node[len- 1];		// parent
+						y= (TreeNode) arr[len- 1];		// parent
 						y.Nodes.Add("Next Untitled");
 
 						j++;
@@ -311,11 +317,11 @@ class Tree_Build	// static
 						y= tree.Nodes[j];
 					}
 
-					y.Tag= j;
+					y.Tag=  j;
 
-					Array.Resize(ref arr_node, len+ 1 );	// tree分+1
-					arr_node[arr_node.Length- 1]= y;	// 配列カットのち、代入
-					// Console.WriteLine("parent arr: "+ arr_node)
+					Array.Resize(ref arr, len+ 1 );	// tree分+1
+					arr[arr.Length- 1]= y;	// 配列カットのち、代入
+					// Console.WriteLine("parent arr: "+ arr)
 				}
 	
 			}else{

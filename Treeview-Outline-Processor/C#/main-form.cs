@@ -34,13 +34,15 @@ class Main_form : Form
 			// TreeBuild (cat '.\TEST.txt' | Out-String)
 
 			Tree_Build.TreeBuild(this, file_doc );
+
 			tools.treeview.SelectedNode= Tree_Build.focus;
+			tools.bookmarkbox.Text= Tree_Build.bookmark.Text;
 
 			Console.WriteLine("---- main-form start ! ");
 
 			{	// Form
 				Text= "Test Form";
-				Size= new Size(646, 626);
+				Size= new Size(646, 736);
 				Font= new Font("Segoe UI", 11);
 				AllowDrop= true;
 			}

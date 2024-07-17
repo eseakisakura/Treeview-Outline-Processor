@@ -1,5 +1,5 @@
 # 高速化手法	ライン処理 -> 正規表現で抽出 
-#		スタック -> 再帰
+# utf8 bomなし対応
  
 Add-Type -AssemblyName System.Windows.Forms > $null 
 Add-Type -AssemblyName System.Drawing > $null
@@ -146,15 +146,16 @@ function TreeBuild([string] $readtext){
 	# example (?<=^@OP)[0-9]+(?=\s*=)
 
 	[string[]] $textline= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(?<=`r`n)(`t| )+?(?=`r`n)")
-	# タブorスペースが一つ以上最短一致
+	# (先読み 改行) タブorスペースが一つ以上最短一致 行末or(後読み 改行)
 	# 空行、ヒットを配列へ
 
 	#write-host ("textline: "+ $textline.Length)
 
-
-	[string[]] $textdoc= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(^|(?<=`r`n(`t| )+?`r`n))(.|`r`n)*?(?=`r`n(`t| )+?`r`n)" )
-	# 先頭or先読み空行　.or`r`n 最短一致　後読み空行
+	[string[]] $textdoc= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(^|(?<=`r`n(`t| )+?`r`n))(.|`r`n)+?(?=`r`n(`t| )+?(`r`n)?)" )
+	# 先頭or(先読み空行分) 任意or`r`nが一つ以上最短一致 (後読み空行分 - 改行あるなし)
 	# 本文、ヒットを配列へ
+
+	#write-host ("textdoc: "+ $textdoc.Length)
 
 	for([int] $i= 0; $i -lt $textdoc.Length; $i++){
 		$textdoc[$i]+= "`r`n"	# 後段のため最終行へ改行付与
@@ -167,12 +168,12 @@ function TreeBuild([string] $readtext){
 	[int] $j= 0
 
 
-	$tree.Nodes.Add("Untitled")
+	$tree.Nodes.Add("Parent Untitled")
 
 	[object] $y= $tree.Nodes[0]
 
 
-	$tree.Nodes[0].Text= "ボトムノード"	# .Text - title
+	# $tree.Nodes[0].Text= "Bottom Untitled"	# .Text - title
 
 	$y.Tag= $j
 	$script:focus= $y	# 初期のフォーカス設定
@@ -187,11 +188,10 @@ function TreeBuild([string] $readtext){
 
 		# 本文入力
 
-
-		$y.Text= [System.Text.RegularExpressions.Regex]::Match( $textdoc[$i] , "(^|(?<=`r`n)).*(?= `t?($|`r`n))")
 		# タイトル
 
-		# 先頭or先読み改行で始まり　タイトル　行末or後読みスペースタブあるなし改行、最初のみヒット
+		$y.Text= [System.Text.RegularExpressions.Regex]::Match( $textdoc[$i] , "(^|(?<=`r`n)).*(?= `t?($|`r`n))")
+		# 先読み(先頭or改行で始まり)　タイトル読込み　後読み(スペースタブあるなし 行末or改行)
 		# 行末は一行文対応ため
 
 
@@ -399,9 +399,10 @@ function DocBuild($x){	# $tree
 		}
 	} #
 
+	# Out-File側でラスト改行が付加されるようだ
 	return $output
  } # func
- 
+ 	
 function ForwardFind($x){ 
 
 	$y= $x			# $script:focus
@@ -756,7 +757,7 @@ $counterbox.AcceptsTab= "True"
 $counterbox.ScrollBars= "Vertical"
  
 # コンテキスト 
-	 
+	
 $contxt_03= New-Object System.Windows.Forms.ToolStripMenuItem 
 $contxt_03.Text= "Bookmark Select"
 $contxt_03.Add_Click({
@@ -877,10 +878,11 @@ $btn2.Add_Click({
 	$script:focus.Name= $editbox.Text
 
 	[string] $rtn= DocBuild $tree
-	write-host ("====")
-	$rtn | write-host
-	write-host ("====")
+	# write-host ("====")
+	# $rtn | write-host
+	# write-host ("====")
 
+	# Out-File 終端改行が付加される
 	$rtn | Out-File -Encoding UTF8 -FilePath ".\TEST-01.txt" # UTF8
 
 	# $rtn | Out-File -Encoding oem -FilePath ".\TEST-01.txt" # shiftJIS

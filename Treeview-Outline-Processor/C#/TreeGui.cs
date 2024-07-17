@@ -9,21 +9,28 @@ class GUI_tools
 	// インスタンスの場合は規模が大きい時
 	public TreeView treeview;
 	public TextBox editbox;
-	public TextBox focusbox;
+	TextBox focusbox;
 	public TextBox bookmarkbox;
-	public Button btn0;
-	public Button btn1;
-	public Button btn2;
+	TextBox counterbox;
 
-	public ContextMenuStrip contxt;
+	Label edit_lbl;
+	Label focus_lbl;
+	Label bookmark_lbl;
+	Label counter_lbl;
 
-	public ToolStripMenuItem contxt_jumpbmk;
-	public ToolStripMenuItem contxt_setbmk;
-	public ToolStripMenuItem contxt_cut;
-	public ToolStripMenuItem contxt_copy;
-	public ToolStripMenuItem contxt_paste;
-	public ToolStripMenuItem contxt_add;
-	public ToolStripMenuItem contxt_addchild;
+	Button btn0;
+	Button btn1;
+	Button btn2;
+
+	ContextMenuStrip contxt;
+
+	ToolStripMenuItem contxt_jumpbmk;
+	ToolStripMenuItem contxt_setbmk;
+	ToolStripMenuItem contxt_cut;
+	ToolStripMenuItem contxt_copy;
+	ToolStripMenuItem contxt_paste;
+	ToolStripMenuItem contxt_add;
+	ToolStripMenuItem contxt_addchild;
 
 	public GUI_tools(Main_form parent )
 	{ 
@@ -36,13 +43,11 @@ class GUI_tools
 
 		treeview.AfterSelect+= (sender, e)=>
 		{
-			// Console.WriteLine("click! window test"+ e.Node.Name);
-
 			Tree_Build.focus= e.Node;
-			// counterbox.Text= e.Node.Tag;
-
 			editbox.Text= (string) e.Node.Name;
-			// focusbox.Text= focus;
+
+			counterbox.Text= e.Node.Tag.ToString();	// int -> (string)キャストだとエラー
+			focusbox.Text= Tree_Build.focus.Text;
 		};
 
 		treeview.MouseDown+= (sender, e)=>
@@ -65,10 +70,21 @@ class GUI_tools
  			}
  		};
 
+		edit_lbl= new Label()
+		{
+			Text= "editbox",
+			Size=  new Size(120,20),
+			Location= new Point(220,10),
+			TextAlign= ContentAlignment.MiddleCenter,
+			BorderStyle= BorderStyle.Fixed3D,
+			// ForeColor= Color.Black,
+			// BackColor= Color.DodgerBlue,
+		};
+
 		editbox= new TextBox()
 		{
 			Size=  new Size(400, 200),
-			Location=  new Point(220, 10),
+			Location=  new Point(220, 30),
 			Multiline = true,
 			AcceptsReturn= true,
 		};
@@ -82,24 +98,58 @@ class GUI_tools
 			Tree_Build.focus.Text= doc[0];	// 行頭
 		};
 
+		focus_lbl= new Label()
+		{
+			Text= "focusbox",
+			Size=  new Size(120,20),
+			Location= new Point(220,230),
+			TextAlign= ContentAlignment.MiddleCenter,
+			BorderStyle= BorderStyle.Fixed3D,
+		};
+
 		focusbox= new TextBox()
 		{
 			Size=  new Size(400, 100),
-			Location=  new Point(220, 220),
+			Location=  new Point(220, 250),
 			Multiline = true,
+		};
+
+		bookmark_lbl= new Label()
+		{
+			Text= "bookmarkbox",
+			Size=  new Size(120,20),
+			Location= new Point(220,350),
+			TextAlign= ContentAlignment.MiddleCenter,
+			BorderStyle= BorderStyle.Fixed3D,
 		};
 
 		bookmarkbox= new TextBox()
 		{
 			Size=  new Size(400, 100),
-			Location=  new Point(220, 330),
+			Location=  new Point(220, 370),
+			Multiline = true,
+		};
+
+		counter_lbl= new Label()
+		{
+			Text= "counterbox - read only",
+			Size=  new Size(180,20),
+			Location= new Point(220,470),
+			TextAlign= ContentAlignment.MiddleCenter,
+			BorderStyle= BorderStyle.Fixed3D,
+		};
+
+		counterbox= new TextBox()
+		{
+			Size=  new Size(400, 100),
+			Location=  new Point(220, 490),
 			Multiline = true,
 		};
 
 		btn0= new Button()
 		{
 			Size=  new Size(100, 100),
-			Location=  new Point(220, 440),
+			Location=  new Point(220, 590),
 			FlatStyle= FlatStyle.Popup,
 			Text= "down search",
 		};
@@ -115,7 +165,7 @@ class GUI_tools
 		btn1= new Button()
 		{
 			Size=  new Size(100, 100),
-			Location=  new Point(320, 440),
+			Location=  new Point(320, 590),
 			FlatStyle= FlatStyle.Popup,
 			Text= "upper search",
 		};
@@ -131,24 +181,27 @@ class GUI_tools
 		btn2= new Button()
 		{
 			Size=  new Size(100, 100),
-			Location=  new Point(420, 440),
+			Location=  new Point(420, 590),
 			FlatStyle= FlatStyle.Popup,
 			Text= "file output",
 		};
 
 		btn2.Click+= (sender, e)=>
 		{
-			string st= Tree_Build.DocBuild(treeview );
-			// Console.WriteLine("file output: "+ tt);
+			string st= Tree_Build.DocNode(treeview );
+			// Console.WriteLine("====");
+			// Console.WriteLine("file output: "+ st);
+			// Console.WriteLine("====");
 
 			// $rtn | Out-File -Encoding UTF8 -FilePath ".\TEST-01.txt" # UTF8
 			StreamWriter wr = new StreamWriter(@".\test-1.txt", false, Encoding.UTF8);
 
-			wr.Write(st);
+			wr.WriteLine(st);	// Out-File同様終端改行が付加
 			wr.Close();	// file close
 		};
 
-		parent.Controls.AddRange(new Control[] { treeview, editbox, focusbox, bookmarkbox, btn0, btn1, btn2 } );	// 最後にtopを読む
+		parent.Controls.AddRange(new Control[] { treeview, edit_lbl, editbox, focus_lbl,focusbox, bookmark_lbl,bookmarkbox, counter_lbl, counterbox } );
+		parent.Controls.AddRange(new Control[] { btn0, btn1, btn2 } );	// 最後にtopを読む
 
 		contxt= new ContextMenuStrip();
 
@@ -170,7 +223,8 @@ class GUI_tools
 		contxt_setbmk.Click+= (sender, e)=>
 		{
 			Tree_Build.bookmark= Tree_Build.focus;
- 		};
+ 			parent.tools.bookmarkbox.Text= Tree_Build.bookmark.Text;
+		};
 
 		contxt_cut= new ToolStripMenuItem()
 		{
@@ -290,7 +344,7 @@ class GUI_tools
 
 
 		TreeNodeCollection y;	// node 配列
-		// TreeNode z;
+
 
 		if(Tree_Build.focus.Level > 0){
 
@@ -332,7 +386,6 @@ class GUI_tools
 		TreeView tree= treeview;	// 参照
 
 		TreeNodeCollection y;	// node 配列
-		TreeNode z;
 		int nn= 0;
 
 		if(Tree_Build.focus.Level > 0){	// $script:focus.Parent -eq $nullのため
@@ -353,7 +406,7 @@ class GUI_tools
 
 		y.Insert( nn, (TreeNode) Tree_Build.node_clip.Clone() );
 
-		z= y[nn];
+		TreeNode z= y[nn];
 
 		Tree_Build.focus= z;	// reforcus
 		tree.SelectedNode=  Tree_Build.focus;
