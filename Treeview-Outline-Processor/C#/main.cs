@@ -12,7 +12,7 @@ static class Program
 
 		Console.WriteLine("Hello World!"+ "\r\n");
 
-		Application.EnableVisualStyles();	// ƒrƒWƒ…ƒAƒ‹ƒXƒ^ƒCƒ‹—LŒø‰»
+		Application.EnableVisualStyles();	// ãƒ“ã‚¸ãƒ¥ã‚¢ãƒ«ã‚¹ã‚¿ã‚¤ãƒ«æœ‰åŠ¹åŒ–
 		Application.Run(new Main_form(args));
 
 
@@ -29,9 +29,9 @@ static class Program
 	static void Setpath_current()
 	{
 
-		string dir_path= System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);	// exeƒJƒŒƒ“ƒgæ“¾
+		string dir_path= System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);	// exeã‚«ãƒ¬ãƒ³ãƒˆå–å¾—
 		
-		System.IO.Directory.SetCurrentDirectory(dir_path);	// <- argsƒJƒŒƒ“ƒg‚ğ•ÏX
+		System.IO.Directory.SetCurrentDirectory(dir_path);	// <- argsã‚«ãƒ¬ãƒ³ãƒˆã‚’å¤‰æ›´
 
 		Console.WriteLine(System.IO.Directory.GetCurrentDirectory());
 	}
