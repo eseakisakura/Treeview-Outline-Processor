@@ -5,7 +5,7 @@ using System.Windows.Forms;
 static class Program
 {
 	[STAThread]
-	static void Main(string[] args)
+	static void Main()
 	{
 	try{
 		Console.WriteLine("Hello World!"+ "\r\n");
