@@ -8,12 +8,10 @@ static class Program
 	static void Main(string[] args)
 	{
 	try{
-		Setpath_current();
-
 		Console.WriteLine("Hello World!"+ "\r\n");
 
 		Application.EnableVisualStyles();	// ビジュアルスタイル有効化
-		Application.Run(new Main_form(args));
+		Application.Run(new Main_form());
 
 
 	}catch (Exception ex){
@@ -24,15 +22,5 @@ static class Program
 		// main_form.Dispose();
 		// Console.ReadKey();
 	}
-	}
-
-	static void Setpath_current()
-	{
-
-		string dir_path= System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);	// exeカレント取得
-		
-		System.IO.Directory.SetCurrentDirectory(dir_path);	// <- argsカレントを変更
-
-		Console.WriteLine(System.IO.Directory.GetCurrentDirectory());
 	}
 }

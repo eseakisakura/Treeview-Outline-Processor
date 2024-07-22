@@ -9,34 +9,26 @@ class Main_form : Form
 {
 	public GUI_tools tools;	// フィールド内記述は、外部へのフックため
 
-	// public int test= 10;
-	private int test= 10;
-
-
-	// プロパティを用意するとよい - 初期値がある場合
-	public int Proper
-	{
-		set{ this.test= value; }
-		get{ return this.test; }
-	}
-
-	// 自動実装プロパティ #5.0は初期値できない
-	public int Proper2{ get; set; }
-
-	public Main_form(string[] args_path)	// constructor 返値はない
+	public Main_form()	// constructor 返値はない
 	{
 		try{
+			string[] args= Environment.GetCommandLineArgs();	// コマンドライン引数
+
+			string dir_path= Path.GetDirectoryName(args[0]);
+
+			Directory.SetCurrentDirectory(dir_path);	// <- argsカレントを変更
+			Console.WriteLine("CurrentDirectory: "+ Directory.GetCurrentDirectory());
+
+
+			string location= "";
+
+			if(args.Length > 1){	// D&D起動のため
+
+				location= args[1];	// args[0]= exe自体
+				Console.WriteLine("D&D location: "+ location);
+			}
 
 			tools= new GUI_tools(this );
-
-
-			string file_doc= File.ReadAllText(@".\TEST.txt", Encoding.UTF8);
-			// TreeBuild (cat '.\TEST.txt' | Out-String)
-
-			Tree_Build.TreeBuild(this, file_doc );
-
-			tools.treeview.SelectedNode= Tree_Build.focus;
-			tools.bookmarkbox.Text= Tree_Build.bookmark.Text;
 
 			Console.WriteLine("---- main-form start ! ");
 
@@ -77,5 +69,5 @@ class Main_form : Form
 			Tree_Build.TreeBuild (this,file_txt );
 			tools.treeview.SelectedNode= Tree_Build.focus;
 		};
-	}
+	}	// constructor
 }	//class
