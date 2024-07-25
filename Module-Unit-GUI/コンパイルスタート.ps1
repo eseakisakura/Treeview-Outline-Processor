@@ -17,15 +17,14 @@ Function Split_path([string]$f){
  } #func
 #>
  
-
-echo "Path :"
+echo "Path :" 
 # 64でもexeは同じものが出る
 # $Env:Path+= ";C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\"
 $Env:Path+= ";C:\Windows\Microsoft.NET\Framework64\v4.0.30319\"
 echo $Env:Path
 echo ""
 
-cd (Split-Path -Parent $MyInvocation.MyCommand.Path)
+cd (Split-Path -Parent $PSCommandPath)
 [Environment]::CurrentDirectory= pwd # working_dir set
 
 # [string[]] $args_path= Split_path $Args[0]
@@ -63,4 +62,4 @@ read-host "pause -- next Lunch Build"
 #csc -reference:common.dll -target:winexe -win32icon:FE_icon.ico -optimize+ .\fm_editor.cs
 #csc -reference:common.dll -target:winexe -win32icon:AG_icon.ico -optimize+ .\arp_gene.cs
 # ----
- 
+ 	
