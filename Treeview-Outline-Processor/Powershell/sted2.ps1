@@ -4,9 +4,9 @@
 Add-Type -AssemblyName System.Windows.Forms > $null 
 Add-Type -AssemblyName System.Drawing > $null
 
-cd (Split-Path -Parent $MyInvocation.MyCommand.Path)
+cd (Split-Path -Parent $PSCommandPath)
 [Environment]::CurrentDirectory= pwd # working_dir set
- 
+ 	
 function NodePaste([string] $sw){ 
 
 	if($script:focus.Level -eq 0){	# $script:focus.Parent -eq $nullのため
@@ -402,7 +402,7 @@ function DocBuild($x){	# $tree
 	# Out-File側でラスト改行が付加されるようだ
 	return $output
  } # func
- 	
+ 
 function ForwardFind($x){ 
 
 	$y= $x			# $script:focus
