@@ -6,7 +6,7 @@ Add-Type -AssemblyName System.Drawing > $null
 
 cd (Split-Path -Parent $PSCommandPath)
 [Environment]::CurrentDirectory= pwd # working_dir set
- 	
+ 
 function NodePaste([string] $sw){ 
 
 	if($script:focus.Level -eq 0){	# $script:focus.Parent -eq $nullのため
@@ -151,21 +151,23 @@ function TreeBuild([string] $readtext){
 
 	#write-host ("textline: "+ $textline.Length)
 
-	[string[]] $textdoc= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(^|(?<=`r`n(`t| )+?`r`n))(.|`r`n)+?(?=`r`n(`t| )+?(`r`n)?)" )
-	# 先頭or(先読み空行分) 任意or`r`nが一つ以上最短一致 (後読み空行分 - 改行あるなし)
+	[string[]] $textdoc= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(^|(?<=`r`n(`t| )+?`r`n))(.|`r`n)+?((?=`r`n(`t| )+?(`r`n))|$)" )
+	# 先頭or(先読み空行分) 任意or`r`nが一つ以上最短一致 (後読み空行分)or行末	#後ろの(`r`n)?あるなしが悪さ
 	# 本文、ヒットを配列へ
+	#2408
 
 	#write-host ("textdoc: "+ $textdoc.Length)
 
 	for([int] $i= 0; $i -lt $textdoc.Length; $i++){
 		$textdoc[$i]+= "`r`n"	# 後段のため最終行へ改行付与
+		# write-host ("textdoc[i]"+$textdoc[$i])	#2408
 	} #
 
 	#write-host ("textdoc: "+ $textdoc)
 
 
 	# [string] $label= ""
-	[int] $j= 0
+#2408	[int] $j= 0
 
 
 	$tree.Nodes.Add("Parent Untitled")
@@ -175,7 +177,7 @@ function TreeBuild([string] $readtext){
 
 	# $tree.Nodes[0].Text= "Bottom Untitled"	# .Text - title
 
-	$y.Tag= $j
+	$y.Tag= 0		# 0 caret	#2408
 	$script:focus= $y	# 初期のフォーカス設定
 
 	# $y.Nodes.AddRange(@("3Untitled", "4Untitled"))
@@ -198,11 +200,16 @@ function TreeBuild([string] $readtext){
 		if($textdoc[$i] -match "`t`r`n"){  # 行末にtabがある
 
 			$script:bookmark= $y
-			# write-host ("bookmark set : "+ $script:bookmark)
+			write-host ("bookmark set : "+ $script:bookmark)
+
+			$script:bookmark_caret= $textdoc[$i].IndexOf("`t`r`n")
+			write-host ("bookmark caret : "+ $script:bookmark_caret)
+
 		}
 
-		$y.Name= [System.Text.RegularExpressions.Regex]::Replace($textdoc[$i], " `t?`r`n", "`r`n")
-		# スペースタブ行のゴミカット、`s`t?`r`n -> `r`n
+		$y.Name= [System.Text.RegularExpressions.Regex]::Replace($textdoc[$i], "( |`t| `t)`r`n", "`r`n")
+		# スペースタブ行のゴミカット、(`s|`t|`s`t)`r`n -> `r`n
+		#2408
 
 
 
@@ -220,8 +227,8 @@ function TreeBuild([string] $readtext){
 			}
 
 			$y= $y.Nodes[0]
-			$j= 0
-			$y.Tag=  $j
+#2408			$j= 0
+			$y.Tag=  0	# 0 caret	#2408
 
 			$arr+= $y		# 下位階層store
 			# write-host ("child arr: "+ $arr)
@@ -250,7 +257,7 @@ function TreeBuild([string] $readtext){
 				# write-host ("forcus set : "+ $script:focus)
 
 
-				[string] $ss= $textline[$i].Replace("`t", "")	# タブカット
+				[string] $ss= $textline[$i].Replace("`t", "")	# タブカット、スペースのみへ
 
 
 			}else{
@@ -268,7 +275,8 @@ function TreeBuild([string] $readtext){
 				$y= $arr[$len]	# 回帰ノードへ
 
 
-				$j= $y.Tag	# 添字を取得
+#2408				$j= $y.Tag	# 添字を取得
+				[int] $j= $y.Index	# 添字を取得	#2408
 
 
 				$y= $arr[($len- 1)]	# parent
@@ -278,7 +286,7 @@ function TreeBuild([string] $readtext){
 				$j++;
 				$y= $y.Nodes[$j]
 
-				$y.Tag= $j
+				$y.Tag= 0		# 0 caret	#2408
 
 				$arr= $arr[0..($len)]
 				$arr[-1]= $y
@@ -327,82 +335,99 @@ function TreeBuild([string] $readtext){
   
 function DocBuild($x){	# $tree 
 
-	[string] $output= ""
 
 	# $x.Nodes.Count | write-host
+
 	for([int] $i= 0; $i -lt $x.Nodes.Count; $i++){
 
 		$y= $x.Nodes[$i]
 
 
-		if($script:bookmark -eq $y){
+		[int] $count= 0
 
-			[string] $bmk= "`t" # tab
-		}else{
-			[string] $bmk= ""
+		if($script:bookmark -eq $y){	# bookmark tabの行取得	#2408
+
+			[int] $index= $y.Name.IndexOf("`r`n")
+
+			while ($index -ne -1 -and $index -lt $script:bookmark_caret){	# not -1 and caret以下
+				$count++;
+				$index= $y.Name.IndexOf("`r`n", $index+ 1);
+				# write-host("index: "+ $index)
+			}
 		}
 
-
+		# write-host("script:bookmark_caret:"+ $script:bookmark_caret)
+		# write-host("count: "+ $count)
 		# write-host("fullpath: "+ $y.FullPath)
 
-		[array] $arr= $y.Name -split "`r`n"
+		[string[]] $arr= $y.Name -split "`r`n"
 
 
-		for([int] $j= 0; $j -lt $arr.Length; $j++){	# $y.Name
+		for([int] $j= 0; $j -lt $arr.Length; $j++){	# 本文
 
-			$output+= $arr[$j]	# string++
+			$script:doc_out+= $arr[$j]	# string line add
 
 			if($y.Text -eq $arr[$j]){	# title line
 
-				$output+= " "	# space
-				$output+= $bmk
+				$script:doc_out+= " "	# space
+			}
+
+			if($j -eq $count- 1 -and $script:bookmark -eq $y){	# bookmark line
+
+				$script:doc_out+= "`t"	# tab
 			}
 
 			if($j -ne ($arr.Length- 1)){	# max count
 
-				$output+= "`r`n"
+				$script:doc_out+= "`r`n"
 			}
 		} #
 
 		# 空行分の出力
 
+		# write-host ("y.Nodes.Count: "+ $y.Nodes.Count)
+
 		if($y.Nodes.Count -gt 0){	# 子階層チェック
 
-			$output+= "`t"	# tab
+			$script:doc_out+= "`t"	# tab
 
 			if($y.IsExpanded -eq "True"){	# node展開時
 
-				$output+= " "	# space
+				$script:doc_out+= " "	# space
 			}
 
-			$output+= "`r`n"
+			$script:doc_out+= "`r`n"
 					#ここで、飲み込む。
 
-			$output+= DocBuild $y 	# 再帰
+			# 再帰で呼び出す場合、ローカル変数returnだとうまくいかない
+			DocBuild $y 	# 再帰
+
+			$script:doc_out+= $dd
 
 					#段数分、ここから下へ吐き出す。
 
-			$output+= " "	# space
+			$script:doc_out+= " "	# space
 
 		}else{	# 兄弟node
-			$output+= " "	# space
+			$script:doc_out+= " "	# space
 		}
 
-		if($focus -eq $y){	# フォーカスあらばadd
+		#2408
+		if($script:focus -eq $y -and $tree.Nodes[0] -ne $y){	# フォーカスあらば tab add、tree.Nodes[0]以外
 
-			$output+= "`t"	# tab
+			$script:doc_out+= "`t"	# tab
 		}
 
 		if($i -lt ($x.Nodes.Count- 1)){	# max count
 
-			$output+= "`r`n"
+			$script:doc_out+= "`r`n"
 		}
 	} #
 
 	# Out-File側でラスト改行が付加されるようだ
-	return $output
+
  } # func
- 
+ 	
 function ForwardFind($x){ 
 
 	$y= $x			# $script:focus
@@ -601,16 +626,17 @@ function Upper_search(){
 # ------------ 
  
 $tree= New-Object System.Windows.Forms.TreeView 
-$tree.Size= "200, 500"
+$tree.Size= "200, 440"
 $tree.Location= "10, 10"
 $tree.HideSelection= $False
 # $tree.SelectedNode (equal) $_.Node
+
 
 $tree.Add_AfterSelect({
 
 	#"------" | write-host
 	#("index: "+ $this.Nodes.IndexOf($_.Node)) | write-host
-	#$this.TopNode.FullPath | write-host
+	$this.TopNode.FullPath | write-host
 	#$_.Node.Parent.FullPath | write-host
 	#$_.Node.PrevNode.LastNode.FullPath | write-host
 	#$_.Node.PrevNode.FullPath | write-host
@@ -620,10 +646,17 @@ $tree.Add_AfterSelect({
 	#"------" | write-host
 
 	$script:focus= $_.Node
-	$counterbox.Text= $_.Node.Tag
-	$editbox.Text= $_.Node.name
-	$focusbox.Text= $script:focus
 
+	# write-host ("_.Node.Index: "+ $_.Node.Index)
+	$counterbox.Text= $_.Node.Index
+
+	$editbox.Text= $_.Node.Name		#2408
+	$editnum.Text= $_.Node.Tag	#2408
+
+	$editbox.SelectionStart= $_.Node.Tag	# caret set
+	$editbox.ScrollToCaret()	#2408
+
+	$focusbox.Text= $script:focus
 	# $bookmarkbox.Text= $script:bookmark
  })
 
@@ -645,7 +678,7 @@ $tree.Add_MouseDown({
  
 $edit_lbl= New-Object System.Windows.Forms.Label 
 $edit_lbl.Text= "editbox"
-$edit_lbl.Size= "100,20"
+$edit_lbl.Size= "200,20"
 $edit_lbl.Location= "210,10"
 $edit_lbl.TextAlign= "MiddleCenter"
 $edit_lbl.BorderStyle= "Fixed3D"
@@ -673,6 +706,8 @@ $editbox.WordWrap= "True"
 #})
 
 $editbox.Add_Leave({
+
+	$script:focus.Tag= $editbox.SelectionStart	#2408
 
 	$script:focus.Name= $this.Text
 
@@ -702,9 +737,19 @@ $editbox.Add_MouseDown({
  }
  })
  
+$editnum= New-Object System.Windows.Forms.TextBox	#2408 
+$editnum.Text= "edit caret"
+
+$editnum.Size= "400, 40"
+$editnum.Location= "210, 310"
+$editnum.Multiline= "True"
+$editnum.AcceptsReturn= "True"
+$editnum.AcceptsTab= "True"
+$editnum.ScrollBars= "Vertical"
+ 
 $focus_lbl= New-Object System.Windows.Forms.Label 
 $focus_lbl.Text= "focusbox"
-$focus_lbl.Size= "100,20"
+$focus_lbl.Size= "200,20"
 $focus_lbl.Location= "210,210"
 $focus_lbl.TextAlign= "MiddleCenter"
 $focus_lbl.BorderStyle= "Fixed3D"
@@ -722,8 +767,8 @@ $focusbox.ScrollBars= "Vertical"
  
 $bookmark_lbl= New-Object System.Windows.Forms.Label 
 $bookmark_lbl.Text= "bookmarkbox"
-$bookmark_lbl.Size= "100,20"
-$bookmark_lbl.Location= "210,310"
+$bookmark_lbl.Size= "200,20"
+$bookmark_lbl.Location= "210,350"
 $bookmark_lbl.TextAlign= "MiddleCenter"
 $bookmark_lbl.BorderStyle= "Fixed3D"
 $bookmark_lbl.ForeColor= "black"
@@ -732,37 +777,51 @@ $bookmarkbox= New-Object System.Windows.Forms.TextBox
 $bookmarkbox.Text= "bookmarkbox"
 
 $bookmarkbox.Size= "400, 80"
-$bookmarkbox.Location= "210, 330"
+$bookmarkbox.Location= "210, 370"
 $bookmarkbox.Multiline= "True"
 $bookmarkbox.AcceptsReturn= "True"
 $bookmarkbox.AcceptsTab= "True"
 $bookmarkbox.ScrollBars= "Vertical"
  
+$bookmarknum= New-Object System.Windows.Forms.TextBox	#2408 
+$bookmarknum.Text= "bookmark caret"
+
+$bookmarknum.Size= "400, 40"
+$bookmarknum.Location= "210, 450"
+$bookmarknum.Multiline= "True"
+$bookmarknum.AcceptsReturn= "True"
+$bookmarknum.AcceptsTab= "True"
+$bookmarknum.ScrollBars= "Vertical"
+ 
 $counter_lbl= New-Object System.Windows.Forms.Label 
-$counter_lbl.Text= "counterbox tree build only"
+$counter_lbl.Text= "counterbox" #2408
 $counter_lbl.Size= "200,20"
-$counter_lbl.Location= "210,410"
+$counter_lbl.Location= "10,450"
 $counter_lbl.TextAlign= "MiddleCenter"
 $counter_lbl.BorderStyle= "Fixed3D"
 $counter_lbl.ForeColor= "black"
  
 $counterbox= New-Object System.Windows.Forms.TextBox 
-$counterbox.Text= "counterbox"
+$counterbox.Text= "tree node index" #2408
 
-$counterbox.Size= "400, 80"
-$counterbox.Location= "210, 430"
+$counterbox.Size= "200, 40"
+$counterbox.Location= "10, 470"
 $counterbox.Multiline= "True"
 $counterbox.AcceptsReturn= "True"
 $counterbox.AcceptsTab= "True"
 $counterbox.ScrollBars= "Vertical"
  
 # コンテキスト 
-	
+	 
 $contxt_03= New-Object System.Windows.Forms.ToolStripMenuItem 
 $contxt_03.Text= "Bookmark Select"
 $contxt_03.Add_Click({
 
 	$tree.SelectedNode= $script:bookmark
+
+	$editbox.SelectionStart= $script:bookmark_caret	# caret set
+	$editbox.ScrollToCaret()	#2408
+
  })
 
 
@@ -771,6 +830,7 @@ $contxt_bmk.Text= "Bookmark Set"
 $contxt_bmk.Add_Click({
 
 	$script:bookmark= $script:focus
+	$script:bookmark_caret= $editbox.SelectionStart 	#2408
 	$bookmarkbox.Text= $script:bookmark
  })
  
@@ -877,13 +937,16 @@ $btn2.Add_Click({
 
 	$script:focus.Name= $editbox.Text
 
-	[string] $rtn= DocBuild $tree
+	$script:doc_out= ""	#2408
+
+	DocBuild $tree
+
 	# write-host ("====")
-	# $rtn | write-host
+	# write-host ("script:doc_out: "+ $script:doc_out)
 	# write-host ("====")
 
 	# Out-File 終端改行が付加される
-	$rtn | Out-File -Encoding UTF8 -FilePath ".\TEST-01.txt" # UTF8
+	$script:doc_out | Out-File -Encoding UTF8 -FilePath ".\TEST-01.txt" # UTF8
 
 	# $rtn | Out-File -Encoding oem -FilePath ".\TEST-01.txt" # shiftJIS
  })
@@ -911,10 +974,10 @@ $frm.Add_FormClosing({
 
 $frm.Add_Load({
 
-	TreeBuild (cat '.\TEST.txt' | Out-String)
+	# TreeBuild (cat '.\TEST.txt' | Out-String)
 
-	$tree.SelectedNode= $script:focus
-	$bookmarkbox.Text= $script:bookmark
+	# $tree.SelectedNode= $script:focus
+	# $bookmarkbox.Text= $script:bookmark
 
  })
 
@@ -938,6 +1001,7 @@ $frm.Add_DragDrop({
 
 	$tree.SelectedNode= $script:focus
 	$bookmarkbox.Text= $script:bookmark
+	$bookmarknum.Text= $script:bookmark_caret	#2408
 
   }catch{
 	echo $_.exception
@@ -945,16 +1009,15 @@ $frm.Add_DragDrop({
 })
  
 $frm.Controls.AddRange(@($tree)) 
-$frm.Controls.AddRange(@($edit_lbl, $editbox, $focus_lbl, $focusbox, $bookmark_lbl, $bookmarkbox, $counter_lbl, $counterbox))
+$frm.Controls.AddRange(@($edit_lbl, $editbox, $editnum, $focus_lbl, $focusbox, $bookmark_lbl, $bookmarkbox, $bookmarknum, $counter_lbl, $counterbox))
 $frm.Controls.AddRange(@($btn0, $btn1, $btn2))
 #下は後ろ側
  
 [object] $script:focus= "" 
 [object] $script:node_clip= ""
 [object] $script:bookmark= ""
-
-
-[bool] $script:test= $True
+[int] $script:bookmark_caret= 0
+[string] $script:doc_out= ""
 
 $frm.ShowDialog() > $null
  
