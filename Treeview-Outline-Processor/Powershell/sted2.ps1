@@ -9,7 +9,8 @@ cd (Split-Path -Parent $PSCommandPath)
  
 function NodePaste([string] $sw){ 
 
-	if($script:focus.Level -eq 0){	# $script:focus.Parent -eq $nullのため
+#2408
+	if($script:focus.Level -eq 0){	# $script:focus.Parent.Nodes -eq $nullのため
 
 		[object] $y= $tree.Nodes
 	}else{
@@ -19,125 +20,119 @@ function NodePaste([string] $sw){
 	if($sw -eq "add"){
 
 		[int] $ee= $y.IndexOf($script:focus)
-		[int] $nn= $ee+ 1	# 下ノード		# .Insert node
+		[int] $nn= $ee+ 1			# 下ノード
 	}else{
-		[int] $nn= $y.IndexOf($script:focus)	# .Insert node
-		##[int] $ee= $nn+ 1	#下ノード
+		[int] $nn= $y.IndexOf($script:focus)	# .Insert number
 	}
 
 
 	$y.Insert($nn, $script:node_clip.Clone())
 
 
-	##[object] $x= $y[$ee]
-	##$x.Tag= $ee
-
 	[object] $z= $y[$nn]
 
-	## $z.Tag= $nn	## 不要
 
-
-	$script:focus= $z	# reforcus
-	$tree.SelectedNode=  $script:focus
+	$tree.SelectedNode= $z	# reforcus
 
  } # func
  
-function PlainPaste([string] $sw, [bool] $new){	# plain text 
+function PlainPaste([string] $sw){	# plain text 
 
+#2408
 	if($script:focus.Level -eq 0){
 
 		[object] $y= $tree.Nodes
-
-		[object] $z= $script:focus.Parent.Nodes
-
-		if($sw -eq "add"){
-
-			[int[]] $dd= 1, 1
-		}else{
-			[int[]] $dd= 0, -1
-		}
-
-		$y.Insert(($y.IndexOf($script:focus)+ $dd[0]), "Untitled")
-
-		[object] $obj= $y[$z.IndexOf($script:focus)+ $dd[1] ]
-
-
 	}else{
 		[object] $y= $script:focus.Parent.Nodes
-
-		if($sw -eq "add"){
-
-			[int[]] $dd= 1, 1
-		}else{
-			[int[]] $dd= 0, -1
-		}
-
-		$y.Insert(($y.IndexOf($script:focus)+ $dd[0]), "Untitled")
-
-		[object] $obj= $y[$y.IndexOf($script:focus)+ $dd[1] ]
 	}
+
+	if($sw -eq "add"){
+
+		[int[]] $dd= 1, 1
+	}else{
+		[int[]] $dd= 0, -1
+	}
+
+	$y.Insert(($y.IndexOf($script:focus)+ $dd[0]), "Untitled")	# ここで $obj.Text= Untitled
+
+	[object] $obj= $y[$y.IndexOf($script:focus)+ $dd[1] ]
+
+	$obj.Tag= 0
 
 
 	[bool] $new= [Windows.Forms.Clipboard]::ContainsText()	# text document チェック
 
 	if($new){
-
 		[string] $cc= [Windows.Forms.Clipboard]::GetText([Windows.Forms.TextDataFormat]::UnicodeText)
 
-		[string[]] $doc= $cc -split "`r`n"	
 
-		$obj.Text= $doc[0]	# 行頭
+		[string[]] $doc= $cc -split "`r`n"
+
+		if($doc[0].Length -gt 0){
+
+			$obj.Text= $doc[0]	# 行頭
+		}
 
 		$obj.Name=  $cc	# clipboard
+
+	}else{
+		$obj.Name=  ""
 	}
 
 
 	$tree.SelectedNode= $obj	# refocus
 
- } #func
+ } #func	
  
-function ChildPaste([string] $sw, [bool] $new){ 
+function NodeChildPaste(){ 
 
-	if($sw -eq "node"){
+#2408
+	[object] $y= $script:focus
 
-		[object] $y= $script:focus
+	# $y.Nodes.AddRange($script:node_clip.Clone())	# これでも良い
+	$y.Nodes.Insert(0, $script:node_clip.Clone())	# node list object first child paste
 
-		# $y.Nodes.AddRange($script:node_clip.Clone())	# これでも良い
-		$y.Nodes.Insert(0, $script:node_clip.Clone())	# node list object first child paste
+	$y.Expand()	# 開状況へ
 
-		$y.Expand()	# 開状況
+	$tree.SelectedNode= $y.Nodes[0]	# refocus
 
-		##$y.Nodes[0].Tag= 0 ## 不要
+ } # func
+ 
+function PlainChildPaste(){ 
 
-		$script:focus= $y.Nodes[0]	# refocus
-		$tree.SelectedNode= $script:focus
+#2408
+	[object] $y= $script:focus
 
-	}else{
-		[object] $y= $script:focus
+	# $y.Nodes.AddRange(@("Untitled"))	# これでも良い
+	$y.Nodes.Insert(0, "Untitled")	# node list object first child paste
 
-		$y.Nodes.AddRange(@("Untitled"))	# これでも良い
-		# $y.Nodes.Insert(0, "Untitled")	# node list object first child paste
+	$y.Expand()	# 開状況へ
 
-		$y.Expand()	# 開状況
+	[object] $obj= $y.Nodes[0]
+
+	$obj.Tag= 0
 
 
-		[bool] $new= [Windows.Forms.Clipboard]::ContainsText()	# text document チェック
+	[bool] $new= [Windows.Forms.Clipboard]::ContainsText()	# text document チェック
 
-		if($new){
-			[string] $cc= [Windows.Forms.Clipboard]::GetText([Windows.Forms.TextDataFormat]::UnicodeText)
+	if($new){
+		[string] $cc= [Windows.Forms.Clipboard]::GetText([Windows.Forms.TextDataFormat]::UnicodeText)
 
-			[string[]] $dd= $cc -split "`r`n"
+		[string[]] $doc= $cc -split "`r`n"
 
-			$y.Nodes[0].Text= $dd[0]	# 行頭
+		if($doc[0].Length -gt 0){
 
-			$y.Nodes[0].Name=  $cc	# clipboard
+			$obj.Text= $doc[0]	# 行頭
 		}
 
-		## $y.Nodes[0].Tag= 0 ## 不要
+		$obj.Name=  $cc	# clipboard
 
-		$script:focus= $y.Nodes[0]	# refocus
-		$tree.SelectedNode= $script:focus
+	}else{
+		$obj.Name=  ""
 	}
+
+	$tree.SelectedNode= $obj	# refocus
+
  } #func
  
 function TreeBuild([string] $readtext){ 
@@ -170,7 +165,7 @@ function TreeBuild([string] $readtext){
 #2408	[int] $j= 0
 
 
-	$tree.Nodes.Add("Parent Untitled")
+	$tree.Nodes.Add("Untitled")
 
 	[object] $y= $tree.Nodes[0]
 
@@ -254,7 +249,7 @@ function TreeBuild([string] $readtext){
 				$y= $arr[$dt_len]
 
 				$script:focus= $y	# フォーカス設定
-				# write-host ("forcus set : "+ $script:focus)
+				write-host ("forcus set : "+ $script:focus)
 
 
 				[string] $ss= $textline[$i].Replace("`t", "")	# タブカット、スペースのみへ
@@ -427,7 +422,7 @@ function DocBuild($x){	# $tree
 	# Out-File側でラスト改行が付加されるようだ
 
  } # func
- 	
+ 
 function ForwardFind($x){ 
 
 	$y= $x			# $script:focus
@@ -626,7 +621,7 @@ function Upper_search(){
 # ------------ 
  
 $tree= New-Object System.Windows.Forms.TreeView 
-$tree.Size= "200, 440"
+$tree.Size= "200, 420"
 $tree.Location= "10, 10"
 $tree.HideSelection= $False
 # $tree.SelectedNode (equal) $_.Node
@@ -636,7 +631,7 @@ $tree.Add_AfterSelect({
 
 	#"------" | write-host
 	#("index: "+ $this.Nodes.IndexOf($_.Node)) | write-host
-	$this.TopNode.FullPath | write-host
+	#$this.TopNode.FullPath | write-host	# 初期は認識エラーが出るので、$tree.Nodes[0]とする
 	#$_.Node.Parent.FullPath | write-host
 	#$_.Node.PrevNode.LastNode.FullPath | write-host
 	#$_.Node.PrevNode.FullPath | write-host
@@ -706,14 +701,20 @@ $editbox.WordWrap= "True"
 #})
 
 $editbox.Add_Leave({
-
-	$script:focus.Tag= $editbox.SelectionStart	#2408
+#2408
+	$script:focus.Tag= $this.SelectionStart
 
 	$script:focus.Name= $this.Text
 
-	[string[]] $dd= $this.Text -split "`r`n"
 
-	$script:focus.Text=  $dd[0]	# 行頭
+	[string[]] $doc= $this.Text -split "`r`n"
+
+	if($doc[0].Length -gt 0){
+
+		$script:focus.Text=  $doc[0]	# 行頭
+	}else{
+		$script:focus.Text= "Untitled"
+	}
  })
 
 $editbox.Add_MouseDown({
@@ -796,7 +797,7 @@ $bookmarknum.ScrollBars= "Vertical"
 $counter_lbl= New-Object System.Windows.Forms.Label 
 $counter_lbl.Text= "counterbox" #2408
 $counter_lbl.Size= "200,20"
-$counter_lbl.Location= "10,450"
+$counter_lbl.Location= "10,430"
 $counter_lbl.TextAlign= "MiddleCenter"
 $counter_lbl.BorderStyle= "Fixed3D"
 $counter_lbl.ForeColor= "black"
@@ -805,7 +806,7 @@ $counterbox= New-Object System.Windows.Forms.TextBox
 $counterbox.Text= "tree node index" #2408
 
 $counterbox.Size= "200, 40"
-$counterbox.Location= "10, 470"
+$counterbox.Location= "10, 450"
 $counterbox.Multiline= "True"
 $counterbox.AcceptsReturn= "True"
 $counterbox.AcceptsTab= "True"
@@ -888,9 +889,9 @@ $contxt_12.Add_Click({
 
 	if($clip -eq "tree.nodes.data.flag.clipboard"){
 
-		ChildPaste "node"
+		NodeChildPaste
 	}else{
-		ChildPaste ""
+		PlainChildPaste
 	}
  })
  
@@ -903,7 +904,7 @@ $btn0= New-Object System.Windows.Forms.Button
 $btn0.Size= "100,100"
 $btn0.Location= "210, 510"
 $btn0.FlatStyle= "Popup"
-$btn0.text= "select down search"
+$btn0.text= "select text down search"
 
 $btn0.Add_Click({
 
@@ -917,7 +918,7 @@ $btn1= New-Object System.Windows.Forms.Button
 $btn1.Size= "100,100"
 $btn1.Location= "310, 510"
 $btn1.FlatStyle= "Popup"
-$btn1.text= "select upper search"
+$btn1.text= "select text upper search"
 
 $btn1.Add_Click({
 
@@ -968,8 +969,14 @@ $frm.TopLevel= $True
 # $frm.Opacity = 0.5
 
 $frm.Add_FormClosing({
+#2408
+	[string] $clip= [Windows.Forms.Clipboard]::GetText([Windows.Forms.TextDataFormat]::UnicodeText)
 
-	$script:focus.Name= $editbox.Text
+	if($clip -eq "tree.nodes.data.flag.clipboard"){
+
+		[Windows.Forms.Clipboard]::SetText("", [Windows.Forms.TextDataFormat]::UnicodeText)
+		# 再起動時の整合性ため空を送る
+	}
  })
 
 $frm.Add_Load({
@@ -979,7 +986,12 @@ $frm.Add_Load({
 	# $tree.SelectedNode= $script:focus
 	# $bookmarkbox.Text= $script:bookmark
 
- })
+#2408
+	$tree.Nodes.Add("Untitled")
+
+	$tree.Nodes[0].Tag= 0		# 0 caret	#2408
+ 	$script:focus= $tree.Nodes[0]
+})
 
 # $frm.Add_Resize({
 #  })
@@ -1007,7 +1019,7 @@ $frm.Add_DragDrop({
 	echo $_.exception
   }
 })
- 
+ 	
 $frm.Controls.AddRange(@($tree)) 
 $frm.Controls.AddRange(@($edit_lbl, $editbox, $editnum, $focus_lbl, $focusbox, $bookmark_lbl, $bookmarkbox, $bookmarknum, $counter_lbl, $counterbox))
 $frm.Controls.AddRange(@($btn0, $btn1, $btn2))
