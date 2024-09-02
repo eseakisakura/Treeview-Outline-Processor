@@ -1083,24 +1083,13 @@ $frm.Add_DragDrop({
 	$script:bookmark_caret= 0
 
 
-	[string] $dec= ""
-
-	$dec= .\get_bom.ps1 $rtn[0]	# UTF8BOM
-
-	if($dec -eq ""){
-		$dec= .\character_code.ps1 $rtn[0]	# OEM
-	}
-
-	if($dec -eq ""){
-		$dec= "UTF8NoBOM"
-	}
-
-	write-host ("dec: "+ $dec)
+	[string] $dec= .\character_code.ps1 $rtn[0]
 
 
 	$tree.Visible= $false
 
-	TreeBuild (Get-Content -Encoding $dec $rtn[0] | Out-String)
+	# TreeBuild (Get-Content -Encoding "utf8NoBOM" $rtn[0] | Out-String)
+	TreeBuild $dec
 
 	$tree.Visible= $true
 

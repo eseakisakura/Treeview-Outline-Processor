@@ -1,26 +1,55 @@
-﻿[string] $path= $Args
+﻿# GetEncoding(932)使用するため.NetCore対応 - ps5,7両対応の場合不要
+# [System.Text.Encoding]::RegisterProvider([System.Text.CodePagesEncodingProvider]::Instance)
 
-[System.Text.Encoding]::RegisterProvider([System.Text.CodePagesEncodingProvider]::Instance) # GetEncoding(932)のための.NetCore対応
+[string] $path= $Args
 
-[string] $utf8= [System.IO.File]::ReadAllText($path)	# UTF8
-[string] $shift= [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::GetEncoding(932))	# shiftJIS
+[byte[]] $byte_str= "","",""	# 3byte
 
-[int] $utf8Len= [System.Text.Encoding]::UTF8.GetByteCount($utf8)
-[int] $shiftLen= [System.Text.Encoding]::UTF8.GetByteCount($shift)
-
-
-[string] $utf8Rep= $utf8.Replace("", "")	# 代用文字以外の文字列
-[string] $shiftRep= $shift.Replace("", "")	# U+0081
-
-$utf8Len+= 12* ($utf8.Length- $utf8Rep.Length)	# 代用文字へ、12byteのペナルティ
-$shiftLen+= 12* ($shift.Length- $shiftRep.Length)
-
-write-host ("utf8Len: "+ $utf8Len)
-write-host ("shiftLen: "+ $shiftLen)
+[object] $fs= New-Object System.IO.FileStream($path, [System.IO.FileMode]::Open)
+$fs.Read($byte_str, 0, 3) > $null
+$fs.Close()
 
 
-if($utf8Len -lt $shiftLen){
-	return ""
+[string] $bom= "EF-BB-BF"
+
+[string] $tt= [System.BitConverter]::ToString($byte_str)
+write-host ""
+write-host ("read 3byte hex: "+ $tt)
+
+
+[string] $output= ""
+
+if($bom -eq $tt){
+	Write-Host "-- UTF8bom --"
+	[object] $bom= New-Object System.Text.UTF8Encoding($True)
+	$output= [System.IO.File]::ReadAllText($path, $bom)
+
 }else{
-	return "OEM"
+	[object] $nobom= New-Object System.Text.UTF8Encoding($False)	# UTF8nobom
+
+	[string] $u8= [System.IO.File]::ReadAllText($path, $nobom)
+	[string] $sf= [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::GetEncoding(932))	# shiftJIS
+
+	[int] $u8_len= [System.Text.Encoding]::UTF8.GetByteCount($u8)
+	[int] $sf_len= [System.Text.Encoding]::UTF8.GetByteCount($sf)
+
+
+	[string] $u8_rep= $u8.Replace("", "")	# 代用文字以外の文字列
+	[string] $sf_rep= $sf.Replace("", "")	# U+0081
+
+	$u8_len+= ($u8.Length- $u8_rep.Length)*12	# 代用文字へ 12byteのペナルティ
+	$sf_len+= ($sf.Length- $sf_rep.Length)*12
+
+	Write-Host ("u8_len: "+ $u8_len)
+	Write-Host ("sf_len: "+ $sf_len)
+
+	if($u8_len -lt $sf_len){
+		Write-Host "-- UTF8nobom --"
+		$output= $u8
+	}else{
+		Write-Host "-- shiftJIS --"
+		$output= $sf
+	}
 }
+
+return $output
