@@ -442,8 +442,6 @@ function DocBuild($x){	# $tree
 		}
 	} #
 
-	# Out-File側でラスト改行が付加されるようだ
-
  } # func
  
 function ForwardFind($x){ 
@@ -965,14 +963,19 @@ $btn2.Add_Click({
 
 	DocBuild $tree
 
+	$script:doc_out+= "`r`n"	# 再帰なのでここで追加
+				# [System.IO.File]::WriteAllTextでは必要、Out-Fileでは不要
 	# write-host ("====")
 	# write-host ("script:doc_out: "+ $script:doc_out)
 	# write-host ("====")
 
-	# Out-File 終端改行が付加される
-	$script:doc_out | Out-File -Encoding "utf8BOM" -FilePath ".\TEST-01.txt" # UTF8 bom
+	# $script:doc_out | Out-File -Encoding "utf8BOM" -FilePath ".\TEST-01.txt" # UTF8 bom
 
-	# $rtn | Out-File -Encoding oem -FilePath ".\TEST-01.txt" # shiftJIS
+	[object] $bom= New-Object System.Text.UTF8Encoding($True)	# UTF8bom
+	[System.IO.File]::WriteAllText(".\TEST-01.txt", $script:doc_out, $bom)
+
+	Write-Host ""
+	Write-Host "UTF8bom file write"
  })
  
 $btn3= New-Object System.Windows.Forms.Button 
@@ -989,14 +992,19 @@ $btn3.Add_Click({
 
 	DocBuild $tree
 
+	$script:doc_out+= "`r`n"	# 再帰なのでここで追加
+				# [System.IO.File]::WriteAllTextでは必要、Out-Fileでは不要
 	# write-host ("====")
 	# write-host ("script:doc_out: "+ $script:doc_out)
 	# write-host ("====")
 
-	# Out-File 終端改行が付加される
-	$script:doc_out | Out-File -Encoding "utf8NoBOM" -FilePath ".\TEST-01.txt" # UTF8 bomなし
+	# $script:doc_out | Out-File -Encoding "utf8NoBOM" -FilePath ".\TEST-01.txt" # UTF8 bomなし
 
-	# $rtn | Out-File -Encoding oem -FilePath ".\TEST-01.txt" # shiftJIS
+	[object] $nobom= New-Object System.Text.UTF8Encoding($False)	# UTF8nobom
+	[System.IO.File]::WriteAllText(".\TEST-01.txt", $script:doc_out, $nobom)
+
+	Write-Host ""
+	Write-Host "UTF8nobom file write"
  })
  
 $btn4= New-Object System.Windows.Forms.Button 
@@ -1013,15 +1021,20 @@ $btn4.Add_Click({
 
 	DocBuild $tree
 
+	$script:doc_out+= "`r`n"	# 再帰なのでここで追加
+				# [System.IO.File]::WriteAllTextでは必要、Out-Fileでは不要
 	# write-host ("====")
 	# write-host ("script:doc_out: "+ $script:doc_out)
 	# write-host ("====")
 
-	# Out-File 終端改行が付加される
+	# $script:doc_out | Out-File -Encoding "OEM" -FilePath ".\TEST-01.txt" # shiftJIS
 
-	$script:doc_out | Out-File -Encoding "OEM" -FilePath ".\TEST-01.txt" # shiftJIS
+	[System.IO.File]::WriteAllText(".\TEST-01.txt", $script:doc_out, [System.Text.Encoding]::GetEncoding(932))	# shiftJIS
+
+	Write-Host ""
+	Write-Host "shiftJIS file write"
  })
- 
+ 	
 $frm= New-Object System.Windows.Forms.Form 
 $frm.Size= @(640, 660) -join "," # string出力
 $frm.Text= "TreeView"
@@ -1102,7 +1115,7 @@ $frm.Add_DragDrop({
 	echo $_.exception
   }
 })
- 	
+ 
 $frm.Controls.AddRange(@($tree)) 
 $frm.Controls.AddRange(@($edit_lbl, $editbox, $editnum, $focus_lbl, $focusbox, $bookmark_lbl, $bookmarkbox, $bookmarknum, $counter_lbl, $counterbox))
 $frm.Controls.AddRange(@($btn0, $btn1, $btn2,$btn3,$btn4))
