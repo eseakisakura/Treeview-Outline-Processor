@@ -175,7 +175,7 @@ function TreeBuild([string] $readtext){
 
 	write-host ("textline.Length: "+ $textline.Length)
 
-	[string[]] $textdoc= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(^|(?<=`r`n(`t| )+?`r`n))(.|`r`n)+?((?=`r`n(`t| )+?`r`n)|$)")
+	[string[]] $textdoc= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(^|(?<=`r`n(`t| )+?`r`n))(.|`r`n)+?(?=`r`n(`t| )+?(`r`n|$))")
 	# 先頭or(先読み空行分) 任意or`r`nが一つ以上最短一致 (後読み空行分)
 	# 本文、ヒットを配列へ
 	#2408
