@@ -1,4 +1,4 @@
-﻿# GetEncoding(932)使用するため.NetCore対応 - ps5,7両対応の場合不要
+﻿# GetEncoding(932)使用するため.NetCore対応 - ps5,7両対応の場合不要 
 # [System.Text.Encoding]::RegisterProvider([System.Text.CodePagesEncodingProvider]::Instance)
 
 [string] $path= $Args
@@ -18,9 +18,10 @@ write-host ("read 3byte hex: "+ $tt)
 
 
 [string] $output= ""
+[string] $ss= ""
 
 if($bom -eq $tt){
-	Write-Host "-- UTF8bom --"
+	$ss= "UTF8bom"
 	[object] $bom= New-Object System.Text.UTF8Encoding($True)
 	$output= [System.IO.File]::ReadAllText($path, $bom)
 
@@ -34,8 +35,8 @@ if($bom -eq $tt){
 	[int] $sf_len= [System.Text.Encoding]::UTF8.GetByteCount($sf)
 
 
-	[string] $u8_rep= $u8.Replace("", "")	# 代用文字以外の文字列
-	[string] $sf_rep= $sf.Replace("", "")	# U+0081
+	[string] $u8_rep= $u8.Replace("?", "")	# 代用文字以外の文字列
+	[string] $sf_rep= $sf.Replace("?", "")	# U+0081
 
 	$u8_len+= ($u8.Length- $u8_rep.Length)*12	# 代用文字へ 12byteのペナルティ
 	$sf_len+= ($sf.Length- $sf_rep.Length)*12
@@ -44,12 +45,15 @@ if($bom -eq $tt){
 	Write-Host ("sf_len: "+ $sf_len)
 
 	if($u8_len -lt $sf_len){
-		Write-Host "-- UTF8nobom --"
+		$ss= "UTF8nobom"
 		$output= $u8
 	}else{
-		Write-Host "-- shiftJIS --"
+		$ss= "shiftJIS"
 		$output= $sf
 	}
+
+	Write-Host "-- "+$ss +"--"
 }
 
-return $output
+return ($output, $ss)
+ 

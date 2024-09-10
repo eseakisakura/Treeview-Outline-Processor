@@ -57,7 +57,10 @@ function PlainPaste([string] $sw){	# plain text
 
 	[object] $obj= $y[$y.IndexOf($script:focus)+ $dd[1] ]
 
-	$obj.Tag= 0
+
+	$obj.Tag= @{}		# hash
+	$obj.Tag["title"]= 0		# title index
+	$obj.Tag["caret"]= 0	# 0 caret	#2408
 
 
 	[bool] $new= [Windows.Forms.Clipboard]::ContainsText()	# text document チェック
@@ -71,9 +74,11 @@ function PlainPaste([string] $sw){	# plain text
 		if($doc[0].Length -gt 0){
 
 			$obj.Text= $doc[0]	# 行頭
+		}else{
+			$obj.Text= "Untitled"
 		}
 
-		$obj.Name=  $cc	# clipboard
+		$obj.Name=  $cc	# clipboard	
 
 	}else{
 		$obj.Name=  ""
@@ -82,7 +87,7 @@ function PlainPaste([string] $sw){	# plain text
 
 	$tree.SelectedNode= $obj	# refocus
 
- } #func	
+ } #func
  
 function NodeChildPaste(){ 
 
@@ -110,7 +115,10 @@ function PlainChildPaste(){
 
 	[object] $obj= $y.Nodes[0]
 
-	$obj.Tag= 0
+
+	$obj.Tag= @{}		# hash
+	$obj.Tag["title"]= 0		# title index
+	$obj.Tag["caret"]= 0	# 0 caret	#2408
 
 
 	[bool] $new= [Windows.Forms.Clipboard]::ContainsText()	# text document チェック
@@ -123,6 +131,8 @@ function PlainChildPaste(){
 		if($doc[0].Length -gt 0){
 
 			$obj.Text= $doc[0]	# 行頭
+		}else{
+			$obj.Text= "Untitled"
 		}
 
 		$obj.Name=  $cc	# clipboard
@@ -135,95 +145,142 @@ function PlainChildPaste(){
 
  } #func
  
+function Line_index([int] $num, [string] $textdoc){	# 改行数 
+
+	[int] $count= 0
+	[int] $index= $textdoc.IndexOf("`r`n")
+
+	[int] $before= 0
+
+	while ($index -ne -1 -and $index -lt $num){	# not -1 and num以下
+
+		$before= $index+ 1	# caret前の行末から次の行頭へ
+		$count++;	# 改行数
+
+		$index= $textdoc.IndexOf("`r`n", $index+ 1)	# index+1以降の"`r`n"
+	} #
+
+	return ($count, $before)
+ } # func
+ 
 function TreeBuild([string] $readtext){ 
 
 
 	# example (?<=^@OP)[0-9]+(?=\s*=)
 
-	[string[]] $textline= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(?<=`r`n)(`t| )+?(?=`r`n)")
-	# (先読み 改行) タブorスペースが一つ以上最短一致 行末or(後読み 改行)
+	[string[]] $textline= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(?<=`r`n)(`t| )+?((?=`r`n)|$)")
+	# (先読み 改行) タブorスペースが一つ以上最短一致 (後読み 改行)or行末
 	# 空行、ヒットを配列へ
+	#2408
 
-	#write-host ("textline: "+ $textline.Length)
+	write-host ("textline.Length: "+ $textline.Length)
 
-	[string[]] $textdoc= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(^|(?<=`r`n(`t| )+?`r`n))(.|`r`n)*?((?=`r`n(`t| )+?(`r`n))|$)" )
-	# 先頭or(先読み空行分) 任意or`r`nが0つ以上最短一致 (後読み空行分)or行末	#後ろの(`r`n)?あるなしが悪さ
+	[string[]] $textdoc= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(^|(?<=`r`n(`t| )+?`r`n))(.|`r`n)+?((?=`r`n(`t| )+?`r`n)|$)")
+	# 先頭or(先読み空行分) 任意or`r`nが一つ以上最短一致 (後読み空行分)
 	# 本文、ヒットを配列へ
 	#2408
 
-	#write-host ("textdoc: "+ $textdoc.Length)
+	write-host ("textdoc.Length: "+ $textdoc.Length)
 
 
-	if( $textline.Length+ 1 -ne $textdoc.Length -or $textline.Length -eq 0 -or $textdoc.Length -eq 0){	# plan text
+	$tree.Nodes.Add("Untitled")
+
+	[object] $y= $tree.Nodes[0]
 
 
-		$tree.Nodes.Add("Untitled")
+	$y.Tag= @{}		# hash
+	$y.Tag["title"]= 0		# title index
+	$y.Tag["caret"]= 0		# 0 caret	#2408
 
-		[object] $y= $tree.Nodes[0]
 
-		$y.Tag= 0		# 0 caret	#2408
+	if( $textline.Length -ne $textdoc.Length -or $textline.Length -eq 0 -or $textdoc.Length -eq 0){	# plan text
 
-		$y.Text= [System.Text.RegularExpressions.Regex]::Match( $readtext , "^.*(?=($|`r`n))")
+
+		[string] $tt= [System.Text.RegularExpressions.Regex]::Match( $readtext , "^.*(?=($|`r`n))")
 		# 先頭　タイトル読込み　後読み(行末or改行)
 		# 行末は一行文対応ため
 
+		if($tt.Length -gt 0){
+
+			$y.Text= $tt
+		}
+
 		$y.Name= $readtext
 
-		$script:focus= $y	# 初期のフォーカス設定
+		$script:focus= $y	# 最終フォーカス設定
 
 
 	}else{	# sted text
 
-		for([int] $i= 0; $i -lt $textdoc.Length; $i++){
-			$textdoc[$i]+= "`r`n"	# 後段のため最終行へ改行付与
-			# write-host ("textdoc[i]"+$textdoc[$i])	#2408
-		} #
 
-		#write-host ("textdoc: "+ $textdoc)
+		#2408	[int] $j= 0
 
 
-		# [string] $label= ""
-#2408		[int] $j= 0
-
-
-		$tree.Nodes.Add("Untitled")
-
-		[object] $y= $tree.Nodes[0]
-
-
-		# $tree.Nodes[0].Text= "Bottom Untitled"	# .Text - title
-
-		$y.Tag= 0		# 0 caret	#2408
 		$script:focus= $y	# 初期のフォーカス設定
-
-		# $y.Nodes.AddRange(@("3Untitled", "4Untitled"))
-
 
 		[array] $arr= $tree, $y	# 階層ごとの最終ノード
 
 
+#		for([int] $i= 0; $i -lt $textdoc.Length; $i++){
+#			$textdoc[$i]+= "`r`n"			# 後段のため最終行へ改行付与
+#			# write-host ("textdoc[i]"+$textdoc[$i])	#2408
+#		} #
+
 
 		for([int] $i= 0; $i -lt $textline.Length; $i++){
 
-			# 本文入力
+
+			$textdoc[$i]+= "`r`n"	# 後段のため最終行へ改行付与
+
+
+			# 本文処理
 
 			# タイトル
-
-			$y.Text= [System.Text.RegularExpressions.Regex]::Match( $textdoc[$i] , "(^|(?<=`r`n)).*(?= `t?($|`r`n))")
+			[string] $tt= [System.Text.RegularExpressions.Regex]::Match( $textdoc[$i] , "(^|(?<=`r`n)).*(?= `t?($|`r`n))")
 			# 先読み(先頭or改行で始まり)　タイトル読込み　後読み(スペースタブあるなし 行末or改行)
 			# 行末は一行文対応ため
 
+			if($tt.Length -gt 0){
 
+				$y.Text= $tt	# Untitled overwrite
+			}
+
+
+			# title index
+			[int] $num= $textdoc[$i].IndexOf(" `r`n")	# `s
+
+			if($num -eq -1){
+				$num= $textdoc[$i].IndexOf(" `t`r`n")	# `s`t
+			}
+
+			write-host("num: "+ $num)
+
+			[int[]] $count= Line_index $num $textdoc[$i]
+
+
+
+			$y.Tag["title"]= $count[0]
+			write-host("y.Tag[title]: "+ $y.Tag["title"])
+
+
+			# bookmark
 			if($textdoc[$i] -match "`t`r`n"){  # 行末にtabがある
 
 				$script:bookmark= $y
 				write-host ("bookmark set : "+ $script:bookmark)
 
-				$script:bookmark_caret= $textdoc[$i].IndexOf("`t`r`n")
-				write-host ("bookmark caret : "+ $script:bookmark_caret)
+				[int] $bmk_num= $textdoc[$i].IndexOf("`t`r`n")
+				write-host("num: "+ $bmk_num)
 
+				[int[]] $bmk_count= Line_index $bmk_num $textdoc[$i]
+
+
+				$script:bookmark_caret= $bmk_count[1]	# caret
+				write-host ("bookmark caret : "+ $script:bookmark_caret)
 			}
 
+
+			# 本文
 			$y.Name= [System.Text.RegularExpressions.Regex]::Replace($textdoc[$i], "( |`t| `t)`r`n", "`r`n")
 			# スペースタブ行のゴミカット、(`s|`t|`s`t)`r`n -> `r`n
 			#2408
@@ -231,11 +288,12 @@ function TreeBuild([string] $readtext){
 
 
 			# 空行処理
+
 			if( $textline[$i] -match "^`t ?$"){  # `t`s? - tabで始まり、spaceがあるかないか
 			# 子ノードへ+ 開状況チェック
 
 
-				$y.Nodes.Add("Child Untitled")		# 1階層下へ
+				$y.Nodes.Add("Untitled")		# 1階層下へ Child Untitled
 
 
 				if( $textline[$i].Contains(" ") -eq $True){	# `s 開状況
@@ -244,8 +302,11 @@ function TreeBuild([string] $readtext){
 				}
 
 				$y= $y.Nodes[0]
-#2408				$j= 0
-				$y.Tag=  0	# 0 caret	#2408
+				#2408	$j= 0
+
+				$y.Tag= @{}		# hash
+				$y.Tag["title"]= 0		# title index
+				$y.Tag["caret"]= 0		# 0 caret	#2408
 
 				$arr+= $y		# 下位階層store
 				# write-host ("child arr: "+ $arr)
@@ -270,7 +331,7 @@ function TreeBuild([string] $readtext){
 
 					$y= $arr[$dt_len]
 
-					$script:focus= $y	# フォーカス設定
+					$script:focus= $y	# 最終フォーカス設定
 					write-host ("forcus set : "+ $script:focus)
 
 
@@ -292,18 +353,22 @@ function TreeBuild([string] $readtext){
 					$y= $arr[$len]	# 回帰ノードへ
 
 
-#2408					$j= $y.Tag	# 添字を取得
+					#2408	$j= $y.Tag	# 添字を取得
 					[int] $j= $y.Index	# 添字を取得	#2408
 
 
 					$y= $arr[($len- 1)]	# parent
 
-					$y.Nodes.Add("Next Untitled")
+					$y.Nodes.Add("Untitled")	# Next Untitled
 
 					$j++;
 					$y= $y.Nodes[$j]
 
-					$y.Tag= 0		# 0 caret	#2408
+
+					$y.Tag= @{}		# hash
+					$y.Tag["title"]= 0		# title index
+					$y.Tag["caret"]= 0		# 0 caret	#2408
+
 
 					$arr= $arr[0..($len)]
 					$arr[-1]= $y
@@ -350,7 +415,7 @@ function TreeBuild([string] $readtext){
 			}
 
 #>
-  
+  	
 function DocBuild($x){	# $tree 
 
 
@@ -360,22 +425,16 @@ function DocBuild($x){	# $tree
 
 		$y= $x.Nodes[$i]
 
+		[int[]] $count= 0, 0
 
-		[int] $count= 0
 
 		if($script:bookmark -eq $y){	# bookmark tabの行取得	#2408
 
-			[int] $index= $y.Name.IndexOf("`r`n")
-
-			while ($index -ne -1 -and $index -lt $script:bookmark_caret){	# not -1 and caret以下
-				$count++;
-				$index= $y.Name.IndexOf("`r`n", $index+ 1);
-				# write-host("index: "+ $index)
-			}
+			$count= Line_index $script:bookmark_caret  $y.Name
 		}
 
 		# write-host("script:bookmark_caret:"+ $script:bookmark_caret)
-		# write-host("count: "+ $count)
+		# write-host("count[0]: "+ $count[0])
 		# write-host("fullpath: "+ $y.FullPath)
 
 		[string[]] $arr= $y.Name -split "`r`n"
@@ -385,12 +444,12 @@ function DocBuild($x){	# $tree
 
 			$script:doc_out+= $arr[$j]	# string line add
 
-			if($y.Text -eq $arr[$j]){	# title line
+			if($y.Tag["title"] -eq $j ){	# title line
 
 				$script:doc_out+= " "	# space
 			}
 
-			if($j -eq $count- 1 -and $script:bookmark -eq $y){	# bookmark line
+			if($j -eq $count[0] -and $script:bookmark -eq $y ){	# bookmark line
 
 				$script:doc_out+= "`t"	# tab
 			}
@@ -415,6 +474,7 @@ function DocBuild($x){	# $tree
 			}
 
 			$script:doc_out+= "`r`n"
+
 					#ここで、飲み込む。
 
 			# 再帰で呼び出す場合、ローカル変数returnだとうまくいかない
@@ -663,17 +723,18 @@ $tree.Add_AfterSelect({
 
 	$script:focus= $_.Node
 
-	# write-host ("_.Node.Index: "+ $_.Node.Index)
-	$counterbox.Text= $_.Node.Index
-
-	$editbox.Text= $_.Node.Name		#2408
-	$editnum.Text= $_.Node.Tag	#2408
-
-	$editbox.SelectionStart= $_.Node.Tag	# caret set
-	$editbox.ScrollToCaret()	#2408
-
 	$focusbox.Text= $script:focus
 	# $bookmarkbox.Text= $script:bookmark
+
+	$counterbox.Text= $_.Node.Index
+	# write-host ("_.Node.Index: "+ $_.Node.Index)
+
+	$editbox.Text= $_.Node.Name
+	$editindex.Text= $_.Node.Tag["title"]
+	$editnum.Text= $_.Node.Tag["caret"]	#2408
+
+	$editbox.SelectionStart= $_.Node.Tag["caret"]	# caret set
+	$editbox.ScrollToCaret()	#2408
  })
 
 
@@ -692,8 +753,30 @@ $tree.Add_MouseDown({
  }
  })
  
+$counter_lbl= New-Object System.Windows.Forms.Label 
+$counter_lbl.Text= "counterbox" #2408
+
+$counter_lbl.Size= "200,20"
+$counter_lbl.Location= "10,430"
+$counter_lbl.TextAlign= "MiddleCenter"
+$counter_lbl.BorderStyle= "Fixed3D"
+$counter_lbl.ForeColor= "black"
+ 
+$counterbox= New-Object System.Windows.Forms.TextBox 
+$counterbox.Text= "tree node index" #2408
+
+$counterbox.Size= "200, 40"
+$counterbox.Location= "10, 450"
+$counterbox.Multiline= "True"
+$counterbox.AcceptsReturn= "True"
+$counterbox.AcceptsTab= "True"
+$counterbox.ScrollBars= "Vertical"
+ 
+# ------------ 
+ 
 $edit_lbl= New-Object System.Windows.Forms.Label 
 $edit_lbl.Text= "editbox"
+
 $edit_lbl.Size= "200,20"
 $edit_lbl.Location= "210,10"
 $edit_lbl.TextAlign= "MiddleCenter"
@@ -704,7 +787,7 @@ $edit_lbl.ForeColor= "black"
 $editbox= New-Object System.Windows.Forms.TextBox 
 $editbox.Text= "editbox"
 
-$editbox.Size= "400, 180"
+$editbox.Size= "400, 200"
 $editbox.Location= "210, 30"
 $editbox.Multiline= "True"
 $editbox.AcceptsReturn= "True"
@@ -723,7 +806,7 @@ $editbox.WordWrap= "True"
 
 $editbox.Add_Leave({
 #2408
-	$script:focus.Tag= $this.SelectionStart
+	$script:focus.Tag["caret"]= $this.SelectionStart
 
 	$script:focus.Name= $this.Text
 
@@ -759,11 +842,31 @@ $editbox.Add_MouseDown({
  }
  })
  
+$index_lbl= New-Object System.Windows.Forms.Label 
+$index_lbl.Text= "indexbox"
+
+$index_lbl.Size= "200,20"
+$index_lbl.Location= "210,230"
+$index_lbl.TextAlign= "MiddleCenter"
+$index_lbl.BorderStyle= "Fixed3D"
+$index_lbl.ForeColor= "black"
+#$index_lbl.BackColor= "dodgerblue"
+ 
+$editindex= New-Object System.Windows.Forms.TextBox	#2408 
+$editindex.Text= "edit title index"
+
+$editindex.Size= "400, 40"
+$editindex.Location= "210, 250"
+$editindex.Multiline= "True"
+$editindex.AcceptsReturn= "True"
+$editindex.AcceptsTab= "True"
+$editindex.ScrollBars= "Vertical"
+ 
 $editnum= New-Object System.Windows.Forms.TextBox	#2408 
 $editnum.Text= "edit caret"
 
 $editnum.Size= "400, 40"
-$editnum.Location= "210, 310"
+$editnum.Location= "210, 290"
 $editnum.Multiline= "True"
 $editnum.AcceptsReturn= "True"
 $editnum.AcceptsTab= "True"
@@ -771,8 +874,9 @@ $editnum.ScrollBars= "Vertical"
  
 $focus_lbl= New-Object System.Windows.Forms.Label 
 $focus_lbl.Text= "focusbox"
+
 $focus_lbl.Size= "200,20"
-$focus_lbl.Location= "210,210"
+$focus_lbl.Location= "210,330"
 $focus_lbl.TextAlign= "MiddleCenter"
 $focus_lbl.BorderStyle= "Fixed3D"
 $focus_lbl.ForeColor= "black"
@@ -780,8 +884,8 @@ $focus_lbl.ForeColor= "black"
 $focusbox= New-Object System.Windows.Forms.TextBox 
 $focusbox.Text= "forcusbox"
 
-$focusbox.Size= "400, 80"
-$focusbox.Location= "210, 230"
+$focusbox.Size= "400, 40"
+$focusbox.Location= "210, 350"
 $focusbox.Multiline= "True"
 $focusbox.AcceptsReturn= "True"
 $focusbox.AcceptsTab= "True"
@@ -789,8 +893,9 @@ $focusbox.ScrollBars= "Vertical"
  
 $bookmark_lbl= New-Object System.Windows.Forms.Label 
 $bookmark_lbl.Text= "bookmarkbox"
+
 $bookmark_lbl.Size= "200,20"
-$bookmark_lbl.Location= "210,350"
+$bookmark_lbl.Location= "210,390"
 $bookmark_lbl.TextAlign= "MiddleCenter"
 $bookmark_lbl.BorderStyle= "Fixed3D"
 $bookmark_lbl.ForeColor= "black"
@@ -798,12 +903,21 @@ $bookmark_lbl.ForeColor= "black"
 $bookmarkbox= New-Object System.Windows.Forms.TextBox 
 $bookmarkbox.Text= "bookmarkbox"
 
-$bookmarkbox.Size= "400, 80"
-$bookmarkbox.Location= "210, 370"
+$bookmarkbox.Size= "400, 40"
+$bookmarkbox.Location= "210, 410"
 $bookmarkbox.Multiline= "True"
 $bookmarkbox.AcceptsReturn= "True"
 $bookmarkbox.AcceptsTab= "True"
 $bookmarkbox.ScrollBars= "Vertical"
+ 
+$bookmark_lbl= New-Object System.Windows.Forms.Label 
+$bookmark_lbl.Text= "bookmarkbox"
+
+$bookmark_lbl.Size= "200,20"
+$bookmark_lbl.Location= "210,390"
+$bookmark_lbl.TextAlign= "MiddleCenter"
+$bookmark_lbl.BorderStyle= "Fixed3D"
+$bookmark_lbl.ForeColor= "black"
  
 $bookmarknum= New-Object System.Windows.Forms.TextBox	#2408 
 $bookmarknum.Text= "bookmark caret"
@@ -815,24 +929,6 @@ $bookmarknum.AcceptsReturn= "True"
 $bookmarknum.AcceptsTab= "True"
 $bookmarknum.ScrollBars= "Vertical"
  
-$counter_lbl= New-Object System.Windows.Forms.Label 
-$counter_lbl.Text= "counterbox" #2408
-$counter_lbl.Size= "200,20"
-$counter_lbl.Location= "10,430"
-$counter_lbl.TextAlign= "MiddleCenter"
-$counter_lbl.BorderStyle= "Fixed3D"
-$counter_lbl.ForeColor= "black"
- 
-$counterbox= New-Object System.Windows.Forms.TextBox 
-$counterbox.Text= "tree node index" #2408
-
-$counterbox.Size= "200, 40"
-$counterbox.Location= "10, 450"
-$counterbox.Multiline= "True"
-$counterbox.AcceptsReturn= "True"
-$counterbox.AcceptsTab= "True"
-$counterbox.ScrollBars= "Vertical"
- 
 # コンテキスト 
 	 
 $contxt_03= New-Object System.Windows.Forms.ToolStripMenuItem 
@@ -843,7 +939,7 @@ $contxt_03.Add_Click({
 
 	$editbox.SelectionStart= $script:bookmark_caret	# caret set
 	$editbox.ScrollToCaret()	#2408
-
+	$editbox.focus()
  })
 
 
@@ -854,6 +950,20 @@ $contxt_bmk.Add_Click({
 	$script:bookmark= $script:focus
 	$script:bookmark_caret= $editbox.SelectionStart 	#2408
 	$bookmarkbox.Text= $script:bookmark
+ })
+
+
+$contxt_title= New-Object System.Windows.Forms.ToolStripMenuItem
+$contxt_title.Text= "Title Set"
+$contxt_title.Add_Click({
+
+	[int] $num= $editbox.SelectionStart 	#2408
+	write-host("num: "+ $num)
+
+	[int[]] $count= Line_index $num $editbox.Text
+	write-host("count[0]: "+ $count[0])
+
+	$script:focus.Tag["title"]= $count[0]	# title index
  })
  
 $contxt_cut= New-Object System.Windows.Forms.ToolStripMenuItem 
@@ -918,7 +1028,7 @@ $contxt_12.Add_Click({
  
 $contxt= New-Object System.Windows.Forms.ContextMenuStrip 
 
-$contxt.Items.AddRange(@($contxt_bmk, $contxt_cut, $contxt_copy, $contxt_paste, $contxt_add, $contxt_12))
+$contxt.Items.AddRange(@($contxt_bmk, $contxt_title, $contxt_cut, $contxt_copy, $contxt_paste, $contxt_add, $contxt_12))
 $contxt.Items.Insert(0, $contxt_03) # list object
   
 $btn0= New-Object System.Windows.Forms.Button 
@@ -1034,9 +1144,16 @@ $btn4.Add_Click({
 	Write-Host ""
 	Write-Host "shiftJIS file write"
  })
- 	
+ 
+$stus= New-Object System.Windows.Forms.StatusStrip 
+$stus.SizingGrip= $false
+
+$stus_label= New-Object System.Windows.Forms.ToolStripStatusLabel
+$stus_label.Text= "Encoding"
+# $stus_label.Font= $FonLabel
+ 
 $frm= New-Object System.Windows.Forms.Form 
-$frm.Size= @(640, 660) -join "," # string出力
+$frm.Size= @(640, 700) -join "," # string出力
 $frm.Text= "TreeView"
 $frm.FormBorderStyle= "Sizable"
 $frm.StartPosition= "WindowsDefaultLocation"
@@ -1068,12 +1185,16 @@ $frm.Add_Load({
 
 	# $tree.SelectedNode= $script:focus
 	# $bookmarkbox.Text= $script:bookmark
-
 #2408
 	$tree.Nodes.Add("Untitled")
 
-	$tree.Nodes[0].Tag= 0		# 0 caret	#2408
- 	$script:focus= $tree.Nodes[0]
+	$tree.Nodes[0].Tag= @{}		# hash
+	$tree.Nodes[0].Tag["title"]= 0	# title index
+	$tree.Nodes[0].Tag["caret"]= 0	# 0 caret	#2408
+
+ 	$tree.Nodes[0].Name= ""
+
+	# $script:focus= $tree.Nodes[0]
 })
 
 # $frm.Add_Resize({
@@ -1096,13 +1217,13 @@ $frm.Add_DragDrop({
 	$script:bookmark_caret= 0
 
 
-	[string] $dec= .\character_code.ps1 $rtn[0]
-
+	[string[]] $dec= .\character_code.ps1 $rtn[0]
+	$stus_label.Text= $dec[1]
 
 	$tree.Visible= $false
 
 	# TreeBuild (Get-Content -Encoding "utf8NoBOM" $rtn[0] | Out-String)
-	TreeBuild $dec
+	TreeBuild $dec[0]
 
 	$tree.Visible= $true
 
@@ -1116,13 +1237,15 @@ $frm.Add_DragDrop({
   }
 })
  
-$frm.Controls.AddRange(@($tree)) 
-$frm.Controls.AddRange(@($edit_lbl, $editbox, $editnum, $focus_lbl, $focusbox, $bookmark_lbl, $bookmarkbox, $bookmarknum, $counter_lbl, $counterbox))
-$frm.Controls.AddRange(@($btn0, $btn1, $btn2,$btn3,$btn4))
+$stus.Items.AddRange(@($stus_label)) 
+
+$frm.Controls.AddRange(@($tree))
+$frm.Controls.AddRange(@($edit_lbl, $editbox, $index_lbl, $editindex, $editnum, $focus_lbl, $focusbox, $bookmark_lbl, $bookmarkbox, $bookmarknum, $counter_lbl, $counterbox))
+$frm.Controls.AddRange(@($btn0, $btn1, $btn2,$btn3,$btn4, $stus))
 #下は後ろ側
  
 [object] $script:focus= "" 
-[object] $script:node_clip= ""
+[object] $script:node_clip= ""	# copy,paste
 [object] $script:bookmark= ""
 [int] $script:bookmark_caret= 0
 [string] $script:doc_out= ""
