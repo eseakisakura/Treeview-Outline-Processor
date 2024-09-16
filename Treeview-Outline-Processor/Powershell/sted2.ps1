@@ -78,7 +78,7 @@ function PlainPaste([string] $sw){	# plain text
 			$obj.Text= "Untitled"
 		}
 
-		$obj.Name=  $cc	# clipboard	
+		$obj.Name=  $cc	# clipboard
 
 	}else{
 		$obj.Name=  ""
@@ -168,14 +168,14 @@ function TreeBuild([string] $readtext){
 
 	# example (?<=^@OP)[0-9]+(?=\s*=)
 
-	[string[]] $textline= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(?<=`r`n)(`t| )+?((?=`r`n)|$)")
+	[string[]] $textline= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(?<=\r\n)(\t| )+?((?=\r\n)|$)")	# " " <- \sでないとダメ
 	# (先読み 改行) タブorスペースが一つ以上最短一致 (後読み 改行)or行末
 	# 空行、ヒットを配列へ
 	#2408
 
 	write-host ("textline.Length: "+ $textline.Length)
 
-	[string[]] $textdoc= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(^|(?<=`r`n(`t| )+?`r`n))(.|`r`n)+?(?=`r`n(`t| )+?(`r`n|$))")
+	[string[]] $textdoc= [System.Text.RegularExpressions.Regex]::Matches($readtext , "(^|(?<=\r\n(\t| )+?\r\n))(.|\r\n)+?(?=\r\n(\t| )+?(\r\n|$))")
 	# 先頭or(先読み空行分) 任意or`r`nが一つ以上最短一致 (後読み空行分)
 	# 本文、ヒットを配列へ
 	#2408
@@ -196,7 +196,7 @@ function TreeBuild([string] $readtext){
 	if( $textline.Length -ne $textdoc.Length -or $textline.Length -eq 0 -or $textdoc.Length -eq 0){	# plan text
 
 
-		[string] $tt= [System.Text.RegularExpressions.Regex]::Match( $readtext , "^.*(?=($|`r`n))")
+		[string] $tt= [System.Text.RegularExpressions.Regex]::Match( $readtext , "^.*?(?=($|\r\n))")
 		# 先頭　タイトル読込み　後読み(行末or改行)
 		# 行末は一行文対応ため
 
@@ -221,11 +221,6 @@ function TreeBuild([string] $readtext){
 		[array] $arr= $tree, $y	# 階層ごとの最終ノード
 
 
-#		for([int] $i= 0; $i -lt $textdoc.Length; $i++){
-#			$textdoc[$i]+= "`r`n"			# 後段のため最終行へ改行付与
-#			# write-host ("textdoc[i]"+$textdoc[$i])	#2408
-#		} #
-
 
 		for([int] $i= 0; $i -lt $textline.Length; $i++){
 
@@ -235,29 +230,25 @@ function TreeBuild([string] $readtext){
 
 			# 本文処理
 
+			[int[]] $count= 0, 0
+
 			# タイトル
-			[string] $tt= [System.Text.RegularExpressions.Regex]::Match( $textdoc[$i] , "(^|(?<=`r`n)).*(?= `t?($|`r`n))")
-			# 先読み(先頭or改行で始まり)　タイトル読込み　後読み(スペースタブあるなし 行末or改行)
-			# 行末は一行文対応ため
+			[object] $exp= [System.Text.RegularExpressions.Regex]::Match( $textdoc[$i] , "(^|(?<=\r\n)).*?(?=( | \t)\r\n)")
+			# (行頭 or 先読改行)　タイトル読込み　(後読みスペース or スペースタブ 改行)
 
-			if($tt.Length -gt 0){
 
-				$y.Text= $tt	# Untitled overwrite
+			if($exp.Length -gt 0){	# Untitled overwrite
+
+				$y.Text= $exp.Value
+				$count= Line_index $exp.Index $textdoc[$i]
+			}else{
+				$exp= [System.Text.RegularExpressions.Regex]::Match( $textdoc[$i] , "^.*?(?=\r\n)")
+				# 1行目
+
+				if($exp.Length -gt 0){
+					$y.Text= $exp.Value
+				}
 			}
-
-
-			# title index
-			[int] $num= $textdoc[$i].IndexOf(" `r`n")	# `s
-
-			if($num -eq -1){
-				$num= $textdoc[$i].IndexOf(" `t`r`n")	# `s`t
-			}
-
-			write-host("num: "+ $num)
-
-			[int[]] $count= Line_index $num $textdoc[$i]
-
-
 
 			$y.Tag["title"]= $count[0]
 			write-host("y.Tag[title]: "+ $y.Tag["title"])
@@ -270,7 +261,7 @@ function TreeBuild([string] $readtext){
 				write-host ("bookmark set : "+ $script:bookmark)
 
 				[int] $bmk_num= $textdoc[$i].IndexOf("`t`r`n")
-				write-host("num: "+ $bmk_num)
+				# write-host("num: "+ $bmk_num)
 
 				[int[]] $bmk_count= Line_index $bmk_num $textdoc[$i]
 
@@ -281,7 +272,10 @@ function TreeBuild([string] $readtext){
 
 
 			# 本文
-			$y.Name= [System.Text.RegularExpressions.Regex]::Replace($textdoc[$i], "( |`t| `t)`r`n", "`r`n")
+
+			$y.Name= [System.Text.RegularExpressions.Regex]::Replace($textdoc[$i], "( |\t| \t)\r\n", "`r`n")
+
+			# $y.Name= $textdoc[$i].Replace("( |`t| `t)`r`n", "`r`n") # 複雑な指定はできない
 			# スペースタブ行のゴミカット、(`s|`t|`s`t)`r`n -> `r`n
 			#2408
 
@@ -415,7 +409,7 @@ function TreeBuild([string] $readtext){
 			}
 
 #>
-  	
+  
 function DocBuild($x){	# $tree 
 
 
@@ -444,9 +438,12 @@ function DocBuild($x){	# $tree
 
 			$script:doc_out+= $arr[$j]	# string line add
 
+
 			if($y.Tag["title"] -eq $j ){	# title line
 
-				$script:doc_out+= " "	# space
+				if($arr[$j].Length -ne 0){		# 空行化さけるためsted仕様
+					$script:doc_out+= " "	# space
+				}
 			}
 
 			if($j -eq $count[0] -and $script:bookmark -eq $y ){	# bookmark line
@@ -699,7 +696,32 @@ function Upper_search(){
 	} #
  } #func
  
+function Highlight_color([string] $exp_set, [object] $color_set){ 
+
+		# write-host ("====: "+ $exp_set)
+
+		[object] $exp= ""
+		[object[]] $regexp= [System.Text.RegularExpressions.Regex]::Matches($script:store_text , $exp_set)
+
+		# write-host ("====: "+ $regexp.Length)
+
+		foreach($exp in $regexp){
+
+			# write-host ("exp.Index, Length: "+ $exp.Index+", "+ $exp.Length)
+			# write-host ("exp.Value: "+ $exp.Value)	# 選択文字
+
+			$rtf_box.Select($exp.Index, $exp.Length)
+			$rtf_box.SelectionColor= $color_set
+		} #
+
+} # func
+ 
 # ------------ 
+ 
+$magenta= [System.Drawing.Color]::FromName("magenta") 
+$cyan= [System.Drawing.Color]::FromName("cyan")
+$lime= [System.Drawing.Color]::FromName("lime")
+$black= [System.Drawing.Color]::FromName("black")
  
 $tree= New-Object System.Windows.Forms.TreeView 
 $tree.Size= "200, 420"
@@ -729,7 +751,8 @@ $tree.Add_AfterSelect({
 	$counterbox.Text= $_.Node.Index
 	# write-host ("_.Node.Index: "+ $_.Node.Index)
 
-	$editbox.Text= $_.Node.Name
+	$editbox.Text= $_.Node.Name	# text -> richtextへ
+
 	$editindex.Text= $_.Node.Tag["title"]
 	$editnum.Text= $_.Node.Tag["caret"]	#2408
 
@@ -784,34 +807,66 @@ $edit_lbl.BorderStyle= "Fixed3D"
 $edit_lbl.ForeColor= "black"
 #$edit_lbl.BackColor= "dodgerblue"
  
-$editbox= New-Object System.Windows.Forms.TextBox 
+$editbox= New-Object System.Windows.Forms.RichTextBox 
 $editbox.Text= "editbox"
 
 $editbox.Size= "400, 200"
 $editbox.Location= "210, 30"
 $editbox.Multiline= "True"
-$editbox.AcceptsReturn= "True"
+# $editbox.AcceptsReturn= "True"	# テキストを改行する<->フォームの既定のボタンをアクティブ
 $editbox.AcceptsTab= "True"
 $editbox.ScrollBars= "Vertical"
 $editbox.WordWrap= "True"
+
+$editbox.ForeColor= $black
 
 # $editbox.SelectedText
 # $editbox.SelectionLength
 # $editbox.SelectionStart
 
 
-#.$editbox.Add_TextChanged({
-#
-#})
+$editbox.Add_TextChanged({
+
+	# write-host ("script:store_text.Length"+ $script:store_text.Length)
+	# write-host ("this.Text.Length"+ $this.Text.Length)
+
+	if($script:store_text.Length -ne $this.Text.Length){
+
+		[int] $nn= $this.SelectionStart
+		$rtf_box.Rtf= $this.Rtf
+
+		$rtf_box.SelectAll()
+		$rtf_box.SelectionColor= $rtf_box.ForeColor	# カラー初期化
+
+
+		$script:store_text= $this.Text	# textbox -> string
+
+
+		Highlight_color "#.*?(?=\n)" $lime	# richtext -> \n
+		Highlight_color "\[.*?(\[\])?\]" $cyan	# C# regex -> \[
+		Highlight_color "`".*?`"" $magenta
+
+
+		$rtf_box.DeselectAll()
+
+		$this.Rtf= $rtf_box.Rtf
+		$this.SelectionStart= $nn
+	}
+
+# Add-Type -AssemblyName System.Drawing > $null
+# $FonLabel= New-Object System.Drawing.Font("Segoe UI", 10)
+# $this.SelectionFont = "font"
+
+})
 
 $editbox.Add_Leave({
 #2408
 	$script:focus.Tag["caret"]= $this.SelectionStart
 
-	$script:focus.Name= $this.Text
+	$script:focus.Name= $this.Text.Replace("`n", "`r`n")	# richtext
 
 
-	[string[]] $doc= $this.Text -split "`r`n"
+	[string[]] $doc= $script:focus.Name -split "`r`n"
 
 	if($doc[0].Length -gt 0){
 
@@ -827,6 +882,8 @@ $editbox.Add_MouseDown({
 
 	switch([string] $_.Button){
 	'Right'{
+$editbox.Rtf | write-host
+
 	}'Left'{
 		write-host ("Button: "+ $rtn)
 		#write-host ("SelectionStart: "+ $this.SelectionStart)
@@ -842,8 +899,25 @@ $editbox.Add_MouseDown({
  }
  })
  
+$rtf_box= New-Object System.Windows.Forms.RichTextBox 
+$rtf_box.Text= "rtf_box"
+
+$rtf_box.Size= "400, 200"
+$rtf_box.Location= "210, 30"
+$rtf_box.Multiline= "True"
+# $rtf_box.AcceptsReturn= "True"	# テキストを改行する<->フォームの既定のボタンをアクティブ
+$rtf_box.AcceptsTab= "True"
+$rtf_box.ScrollBars= "Vertical"
+$rtf_box.WordWrap= "True"
+
+$rtf_box.ForeColor= $black
+
+# $rtf_box.SelectedText
+# $rtf_box.SelectionLength
+# $rtf_box.SelectionStart
+ 
 $index_lbl= New-Object System.Windows.Forms.Label 
-$index_lbl.Text= "indexbox"
+$index_lbl.Text= "title indexbox"
 
 $index_lbl.Size= "200,20"
 $index_lbl.Location= "210,230"
@@ -957,15 +1031,15 @@ $contxt_title= New-Object System.Windows.Forms.ToolStripMenuItem
 $contxt_title.Text= "Title Set"
 $contxt_title.Add_Click({
 
-	[int] $num= $editbox.SelectionStart 	#2408
+	[int] $num= $editbox.SelectionStart 	#2408	
 	write-host("num: "+ $num)
 
-	[int[]] $count= Line_index $num $editbox.Text
+	[int[]] $count= Line_index $num $editbox.Text.Replace("`n", "`r`n")	# richtext
 	write-host("count[0]: "+ $count[0])
 
 	$script:focus.Tag["title"]= $count[0]	# title index
  })
- 
+ 	
 $contxt_cut= New-Object System.Windows.Forms.ToolStripMenuItem 
 $contxt_cut.Text= "Cut"
 $contxt_cut.Add_Click({
@@ -1067,7 +1141,7 @@ $btn2.text= "doc file write UTF8 bom"
 
 $btn2.Add_Click({
 
-	$script:focus.Name= $editbox.Text
+	$script:focus.Name= $editbox.Text.Replace("`n", "`r`n")
 
 	$script:doc_out= ""	#2408
 
@@ -1096,7 +1170,7 @@ $btn3.text= "doc file write UTF8 no bom"
 
 $btn3.Add_Click({
 
-	$script:focus.Name= $editbox.Text
+	$script:focus.Name= $editbox.Text.Replace("`n", "`r`n")
 
 	$script:doc_out= ""	#2408
 
@@ -1125,7 +1199,7 @@ $btn4.text= "doc file write shiftJIS"
 
 $btn4.Add_Click({
 
-	$script:focus.Name= $editbox.Text
+	$script:focus.Name= $editbox.Text.Replace("`n", "`r`n")
 
 	$script:doc_out= ""	#2408
 
@@ -1220,12 +1294,12 @@ $frm.Add_DragDrop({
 	[string[]] $dec= .\character_code.ps1 $rtn[0]
 	$stus_label.Text= $dec[1]
 
-	$tree.Visible= $false
+	$tree.BeginUpdate()
 
 	# TreeBuild (Get-Content -Encoding "utf8NoBOM" $rtn[0] | Out-String)
 	TreeBuild $dec[0]
 
-	$tree.Visible= $true
+	$tree.EndUpdate()
 
 
 	$tree.SelectedNode= $script:focus
@@ -1249,6 +1323,7 @@ $frm.Controls.AddRange(@($btn0, $btn1, $btn2,$btn3,$btn4, $stus))
 [object] $script:bookmark= ""
 [int] $script:bookmark_caret= 0
 [string] $script:doc_out= ""
+[string] $script:store_text= ""
 
 $frm.ShowDialog() > $null
  
