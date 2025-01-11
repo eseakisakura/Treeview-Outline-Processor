@@ -17,12 +17,17 @@ function NodePaste([string] $sw){
 		[object] $y= $script:focus.Parent.Nodes	# forcusノードの下へadd
 	}
 
+
+	[int] $nn= $y.IndexOf($script:focus)
+
 	if($sw -eq "add"){
 
-		[int] $ee= $y.IndexOf($script:focus)
-		[int] $nn= $ee+ 1			# 下ノード
+		$nn= $nn+ 1			# 下ノード
 	}else{
-		[int] $nn= $y.IndexOf($script:focus)	# .Insert number
+		if($script:focus.Name.Length -eq 0){
+
+			$script:focus.Remove()
+		}
 	}
 
 
@@ -46,16 +51,22 @@ function PlainPaste([string] $sw){	# plain text
 		[object] $y= $script:focus.Parent.Nodes
 	}
 
+	[int] $nn= $y.IndexOf($script:focus)
+
 	if($sw -eq "add"){
 
-		[int[]] $dd= 1, 1
+		$nn= $nn+ 1			# 下ノード
+
 	}else{
-		[int[]] $dd= 0, -1
+		if($script:focus.Name.Length -eq 0){
+
+			$script:focus.Remove()
+		}
 	}
 
-	$y.Insert(($y.IndexOf($script:focus)+ $dd[0]), "Untitled")	# ここで $obj.Text= Untitled
+	$y.Insert($nn, "Untitled")	# ここで $obj.Text= Untitled
 
-	[object] $obj= $y[$y.IndexOf($script:focus)+ $dd[1] ]
+	[object] $obj= $y[$nn]
 
 
 	$obj.Tag= @{}		# hash
@@ -721,7 +732,12 @@ function Highlight_color([string] $exp_set, [object] $color_set){
 $magenta= [System.Drawing.Color]::FromName("magenta") 
 $cyan= [System.Drawing.Color]::FromName("cyan")
 $lime= [System.Drawing.Color]::FromName("lime")
+
 $black= [System.Drawing.Color]::FromName("black")
+
+$red= [System.Drawing.Color]::FromName("red")
+$blue= [System.Drawing.Color]::FromName("blue")
+$green= [System.Drawing.Color]::FromName("green")
  
 $tree= New-Object System.Windows.Forms.TreeView 
 $tree.Size= "200, 420"
@@ -842,9 +858,20 @@ $editbox.Add_TextChanged({
 		$script:store_text= $this.Text	# textbox -> string
 
 
-		Highlight_color "#.*?(?=\n)" $lime	# richtext -> \n
-		Highlight_color "\[.*?(\[\])?\]" $cyan	# C# regex -> \[
-		Highlight_color "`".*?`"" $magenta
+		# 変数指定	# C# regex -> \[
+		Highlight_color "\[.*?(\[\])?\]" $cyan
+
+		# 2重引用符
+		Highlight_color '(?<!`)"(`"|.)*?"' $magenta
+
+		# Highlight_color "(?<==.*`").*?(?=`".*(\n|;))" $magenta
+		# Highlight_color "`'[^`"]*?`'" $magenta
+
+		# シングル引用符
+		Highlight_color "(?<!`".*?)'(``'|.)*?'(?!.*?`")" $red
+
+		# 文末コメント	# richtextbox $ -> \n
+		Highlight_color '(^|(?<=(?<!"[^"]*)"[^"]*("[^"]*"[^"]*)*(?![^"])"[^"]*))#.*\n' $lime
 
 
 		$rtf_box.DeselectAll()
@@ -898,7 +925,7 @@ $editbox.Rtf | write-host
 	echo $_.exception
  }
  })
- 
+ 	
 $rtf_box= New-Object System.Windows.Forms.RichTextBox 
 $rtf_box.Text= "rtf_box"
 
@@ -1039,7 +1066,7 @@ $contxt_title.Add_Click({
 
 	$script:focus.Tag["title"]= $count[0]	# title index
  })
- 	
+ 
 $contxt_cut= New-Object System.Windows.Forms.ToolStripMenuItem 
 $contxt_cut.Text= "Cut"
 $contxt_cut.Add_Click({
