@@ -6,6 +6,10 @@ Add-Type -AssemblyName System.Drawing > $null
 
 cd (Split-Path -Parent $PSCommandPath)
 [Environment]::CurrentDirectory= pwd # working_dir set
+
+
+# $FonLabel= New-Object System.Drawing.Font("Segoe UI", 10)
+
  
 function NodePaste([string] $sw){ 
 
@@ -707,24 +711,44 @@ function Upper_search(){
 	} #
  } #func
  
-function Highlight_color([string] $exp_set, [object] $color_set){ 
+function Highlight_color([string] $exp_set, [object] $color_set, [string] $sw){ 
 
-		# write-host ("====: "+ $exp_set)
+	# write-host ("====: "+ $exp_set)
 
-		[object] $exp= ""
-		[object[]] $regexp= [System.Text.RegularExpressions.Regex]::Matches($script:store_text , $exp_set)
 
-		# write-host ("====: "+ $regexp.Length)
+	[object]  $option
 
-		foreach($exp in $regexp){
+	switch($sw){
+	"R->L"{
+		$option = [System.Text.RegularExpressions.RegexOptions]::RightToLeft
+		break;
+	#}"CPL"{	# テスト用 ->new objectからMSIL コードをつくり、matchメソッドで呼び出す場合使用
+	#	$option = [System.Text.RegularExpressions.RegexOptions]::Compiled
+	#	break;
+	}default{
+ 		$option = [System.Text.RegularExpressions.RegexOptions]::None
+	}
+	} #sw
 
-			# write-host ("exp.Index, Length: "+ $exp.Index+", "+ $exp.Length)
-			# write-host ("exp.Value: "+ $exp.Value)	# 選択文字
 
-			$rtf_box.Select($exp.Index, $exp.Length)
-			$rtf_box.SelectionColor= $color_set
-		} #
+	[object[]] $regexp = [System.Text.RegularExpressions.Regex]::Matches($script:store_text, $exp_set, $option )
 
+
+
+
+	# write-host ("====: "+ $regexp.Length)
+
+
+	[object] $exp= ""
+
+	foreach($exp in $regexp){
+
+		# write-host ("exp.Index, Length: "+ $exp.Index+", "+ $exp.Length)
+		# write-host ("exp.Value: "+ $exp.Value)	# 選択文字
+
+		$rtf_box.Select($exp.Index, $exp.Length)
+		$rtf_box.SelectionColor= $color_set
+	} #
 } # func
  
 # ------------ 
@@ -813,16 +837,6 @@ $counterbox.ScrollBars= "Vertical"
  
 # ------------ 
  
-$edit_lbl= New-Object System.Windows.Forms.Label 
-$edit_lbl.Text= "editbox"
-
-$edit_lbl.Size= "200,20"
-$edit_lbl.Location= "210,10"
-$edit_lbl.TextAlign= "MiddleCenter"
-$edit_lbl.BorderStyle= "Fixed3D"
-$edit_lbl.ForeColor= "black"
-#$edit_lbl.BackColor= "dodgerblue"
- 
 $editbox= New-Object System.Windows.Forms.RichTextBox 
 $editbox.Text= "editbox"
 
@@ -839,6 +853,7 @@ $editbox.ForeColor= $black
 # $editbox.SelectedText
 # $editbox.SelectionLength
 # $editbox.SelectionStart
+# $editbox.SelectionFont = "font"
 
 
 $editbox.Add_TextChanged({
@@ -858,20 +873,44 @@ $editbox.Add_TextChanged({
 		$script:store_text= $this.Text	# textbox -> string
 
 
-		# 変数指定	# C# regex -> \[
-		Highlight_color "\[.*?(\[\])?\]" $cyan
 
-		# 2重引用符
-		Highlight_color '(?<!`)"(`"|.)*?"' $magenta
+		# (?im) <- + [---.RegexOptions]::IgnoreCase小文字大文字区別せず
+		# (?m) <- [---.RegexOptions]::Multilineのインライン処理(行単位へ変更)
 
-		# Highlight_color "(?<==.*`").*?(?=`".*(\n|;))" $magenta
-		# Highlight_color "`'[^`"]*?`'" $magenta
+
+		# 変数指定
+
+		# \[	<- [int] or [^a]と区別できないため C# regex
+
+		Highlight_color "(?m)\[.*?(\[\])?\]" $cyan
+		# Highlight_color "(?m)\$" $cyan	# $文字へ適用
+
 
 		# シングル引用符
-		Highlight_color "(?<!`".*?)'(``'|.)*?'(?!.*?`")" $red
+		Highlight_color "(?m)(?<!``)'(``'|[^'])*?'" $magenta
 
-		# 文末コメント	# richtextbox $ -> \n
-		Highlight_color '(^|(?<=(?<!"[^"]*)"[^"]*("[^"]*"[^"]*)*(?![^"])"[^"]*))#.*\n' $lime
+		# 2重引用符
+		Highlight_color '(?m)(?<!`)"(`"|.)*?(?<!`)"' $magenta
+
+
+		# 文末コメント	# richtextbox $ -> \n single mode
+		Highlight_color '(?m)#+.*?$' $lime
+
+		# 文字列内"#"には、対応できない
+
+
+		# 逆読み
+		# Highlight_color '(?m)#+.*?$' $lime "R->L"
+		# "#"+$num
+		# Highlight_color '(?m)#[^"]*?"[^"]*?$' $red "R->L"
+		# (?<="#")+$num
+		# Highlight_color '(?m)(?<=#[^"]*?")[^"]*?$' $blue "R->L"
+
+
+		# #がある文字列
+		# Highlight_color '"[^"]*?#[^"]*?"' $red
+		# " -- # -- "
+		# Highlight_color '(?<=".*?)#(?=.*?")' $lime
 
 
 		$rtf_box.DeselectAll()
@@ -879,11 +918,6 @@ $editbox.Add_TextChanged({
 		$this.Rtf= $rtf_box.Rtf
 		$this.SelectionStart= $nn
 	}
-
-# Add-Type -AssemblyName System.Drawing > $null
-# $FonLabel= New-Object System.Drawing.Font("Segoe UI", 10)
-# $this.SelectionFont = "font"
-
 })
 
 $editbox.Add_Leave({
@@ -926,6 +960,16 @@ $editbox.Rtf | write-host
  }
  })
  	
+$edit_lbl= New-Object System.Windows.Forms.Label 
+$edit_lbl.Text= "editbox"
+
+$edit_lbl.Size= "200,20"
+$edit_lbl.Location= "210,10"
+$edit_lbl.TextAlign= "MiddleCenter"
+$edit_lbl.BorderStyle= "Fixed3D"
+$edit_lbl.ForeColor= "black"
+#$edit_lbl.BackColor= "dodgerblue"
+ 
 $rtf_box= New-Object System.Windows.Forms.RichTextBox 
 $rtf_box.Text= "rtf_box"
 
@@ -1031,7 +1075,7 @@ $bookmarknum.AcceptsTab= "True"
 $bookmarknum.ScrollBars= "Vertical"
  
 # コンテキスト 
-	 
+	
 $contxt_03= New-Object System.Windows.Forms.ToolStripMenuItem 
 $contxt_03.Text= "Bookmark Select"
 $contxt_03.Add_Click({
